@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⚡ Hermes Clipper | Agentic Ingestion</title>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0a0a0a;
+            --gold: #d4af37;
+            --gold-dim: #8a6d1a;
+            --surface: #121212;
+            --text: #e0e0e0;
+            --glow: 0 0 15px rgba(212, 175, 55, 0.3);
+        }
+
+        * {
+            box-sizing: border-box;
+            cursor: crosshair;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: 'IBM Plex Mono', monospace;
+            margin: 0;
+            overflow-x: hidden;
+            line-height: 1.5;
+        }
+
+        /* --- CRT Scanline Effect --- */
+        body::before {
+            content: " ";
+            display: block;
+            position: fixed;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
+                        linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            z-index: 9999;
+            background-size: 100% 4px, 3px 100%;
+            pointer-events: none;
+            opacity: 0.3;
+        }
+
+        header {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            border-bottom: 1px solid var(--gold-dim);
+        }
+
+        .ascii-logo {
+            color: var(--gold);
+            white-space: pre;
+            font-size: 10px;
+            line-height: 1.1;
+            margin-bottom: 30px;
+            text-shadow: var(--glow);
+            animation: flicker 2s infinite;
+        }
+
+        @keyframes flicker {
+            0% { opacity: 0.9; }
+            5% { opacity: 0.5; }
+            10% { opacity: 0.9; }
+            50% { opacity: 1; }
+            90% { opacity: 0.9; }
+            100% { opacity: 1; }
+        }
+
+        .terminal-box {
+            background: var(--surface);
+            border: 1px solid var(--gold-dim);
+            padding: 40px;
+            max-width: 800px;
+            width: 100%;
+            position: relative;
+            box-shadow: var(--glow);
+        }
+
+        .terminal-header {
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            background: var(--gold-dim);
+            color: var(--bg);
+            font-weight: bold;
+            font-size: 12px;
+            padding: 4px 10px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .status-pill {
+            display: inline-block;
+            width: 8px; height: 8px;
+            background: #00ff00;
+            border-radius: 50%;
+            margin-right: 5px;
+            box-shadow: 0 0 10px #00ff00;
+        }
+
+        h1 { font-size: 32px; color: var(--gold); margin-top: 0; }
+        .slogan { font-size: 18px; color: #888; margin-bottom: 30px; }
+
+        .btn {
+            padding: 12px 24px;
+            border: 1px solid var(--gold);
+            background: transparent;
+            color: var(--gold);
+            font-family: inherit;
+            font-weight: bold;
+            text-transform: uppercase;
+            text-decoration: none;
+            transition: all 0.2s;
+            display: inline-block;
+        }
+
+        .btn:hover {
+            background: var(--gold);
+            color: var(--bg);
+            box-shadow: var(--glow);
+        }
+
+        .caveman-toggle {
+            position: fixed;
+            top: 20px; right: 20px;
+            background: var(--surface);
+            border: 1px solid var(--gold-dim);
+            padding: 10px;
+            font-size: 12px;
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 100px 20px;
+        }
+
+        .module-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+        }
+
+        .module-card {
+            padding: 30px;
+            border: 1px solid #222;
+            transition: border 0.3s;
+            background: rgba(20, 20, 20, 0.5);
+        }
+
+        .module-card:hover {
+            border-color: var(--gold);
+        }
+
+        .module-card h3 { color: var(--gold); margin-top: 0; font-size: 14px; text-transform: uppercase; }
+
+        code { color: var(--gold); background: #000; padding: 2px 5px; }
+
+        section h2 {
+            font-size: 14px;
+            text-transform: uppercase;
+            border-bottom: 1px solid #222;
+            padding-bottom: 10px;
+            margin-bottom: 40px;
+            color: #555;
+        }
+
+        footer {
+            text-align: center;
+            padding: 100px 20px;
+            border-top: 1px solid #222;
+            font-size: 12px;
+            color: #444;
+        }
+
+        /* --- Transitions --- */
+        .caveman-active [data-caveman] { display: inline; }
+        .caveman-active [data-normal] { display: none; }
+        body:not(.caveman-active) [data-caveman] { display: none; }
+    </style>
+</head>
+<body>
+
+<div class="caveman-toggle">
+    <span>CAVEMAN_MODE</span>
+    <input type="checkbox" id="modeSwitch">
+</div>
+
+<header>
+    <div class="ascii-logo">
+    __  __ __________  __  _____________   ________    _________  ____  __________ 
+   / / / / ____/ __ \/  |/  / ____/ ___/  / ____/ /   /  _/ __ \/ __ \/ ____/ __ \
+  / /_/ / __/ / /_/ / /|_/ / __/  \__ \  / /   / /    / // /_/ / /_/ / __/ / /_/ /
+ / __  / /___/ _, _/ /  / / /___ ___/ / / /___/ /____/ // ____/ ____/ /___/ _, _/ 
+/_/ /_/_____/_/ |_/_/  /_/_____//____/  \____/_____/___/_/   /_/   /_____/_/ |_|  
+    </div>
+    
+    <div class="terminal-box">
+        <div class="terminal-header">
+            <span>SESSION: 2026-04-16</span>
+            <span><span class="status-pill"></span>BRIDGE: ONLINE</span>
+        </div>
+        <h1 data-normal="The Agentic Ingestion Suite">The Agentic Ingestion Suite</h1>
+        <h1 data-caveman="ME FEED BRAIN">ME FEED BRAIN</h1>
+        <p class="slogan" data-normal="Because you're too busy hunting to organize your own mess.">Because you're too busy hunting to organize your own mess.</p>
+        <p class="slogan" data-caveman="YOU HUNT. ME FILE.">YOU HUNT. ME FILE.</p>
+        
+        <a href="https://github.com/frostmute/hermes-clipper" class="btn">Hunt Code</a>
+    </div>
+</header>
+
+<div class="container">
+    <section>
+        <h2>01_MODULES</h2>
+        <div class="module-grid">
+            <div class="card module-card">
+                <h3>The Brain</h3>
+                <p data-normal="The clipping skill for Hermes Agent. Handles research, categorization, and cross-linking.">The clipping skill for Hermes Agent. Handles research, categorization, and cross-linking.</p>
+                <p data-caveman="AGENT BRAIN. KNOW ALL.">AGENT BRAIN. KNOW ALL.</p>
+            </div>
+            <div class="card module-card">
+                <h3>The Bridge</h3>
+                <p data-normal="A FastAPI local gateway. Securely bridges browser and vault.">A FastAPI local gateway. Securely bridges browser and vault.</p>
+                <p data-caveman="PATH TO VAULT. FAST.">PATH TO VAULT. FAST.</p>
+            </div>
+            <div class="card module-card">
+                <h3>The Scout</h3>
+                <p data-normal="One-click capture extension. Zero friction. Zero config.">One-click capture extension. Zero friction. Zero config.</p>
+                <p data-caveman="CLICK. GRAB. DONE.">CLICK. GRAB. DONE.</p>
+            </div>
+        </div>
+    </section>
+
+    <section>
+        <h2>02_THE_SAUCE</h2>
+        <div class="terminal-box" style="padding: 20px; background: #050505;">
+            <p>> Initializing Flywheel...</p>
+            <p>> Usage detected. Context compounding...</p>
+            <p>> <span style="color: var(--gold);">Intelligence Gain: +42%</span></p>
+            <p>> Status: <span data-normal="Synthesizing Research">Synthesizing Research</span><span data-caveman="THINK DEEP">THINK DEEP</span></p>
+        </div>
+    </section>
+</div>
+
+<footer>
+    <p>⚡ HERMES CLIPPER | v0.1.0-ALPHA</p>
+    <p>STAND ON GIANTS. GRUNT OFTEN.</p>
+</footer>
+
+<script>
+    const modeSwitch = document.getElementById('modeSwitch');
+    modeSwitch.addEventListener('change', () => {
+        document.body.classList.toggle('caveman-active', modeSwitch.checked);
+    });
+</script>
+
+</body>
+</html>
