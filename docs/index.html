@@ -3,229 +3,391 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>⚡ Hermes Clipper - Intelligent Agentic Web Clipping</title>
+    <title>⚡ Hermes Clipper | Command Center</title>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #121212;
+            --bg: #080808;
             --gold: #d4af37;
+            --gold-bright: #ffdf00;
+            --gold-dim: #6b5514;
+            --surface: #111111;
             --text: #e0e0e0;
-            --accent: #1f1f1f;
-            --purple: #7c4dff;
+            --glow: 0 0 20px rgba(212, 175, 55, 0.4);
         }
+
+        * { box-sizing: border-box; cursor: crosshair; }
+        html { scroll-behavior: smooth; }
+
         body {
             background-color: var(--bg);
             color: var(--text);
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            font-family: 'IBM Plex Mono', monospace;
             margin: 0;
-            padding: 0;
+            overflow-x: hidden;
             line-height: 1.6;
         }
+
+        /* --- CRT Effects --- */
+        body::before {
+            content: " ";
+            display: block;
+            position: fixed;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
+                        linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            z-index: 9999;
+            background-size: 100% 4px, 3px 100%;
+            pointer-events: none;
+            opacity: 0.2;
+        }
+
         header {
-            min-height: 80vh;
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            text-align: center;
-            border-bottom: 2px solid var(--gold);
-            background: radial-gradient(circle at center, #1a1a1a 0%, #121212 100%);
+            padding: 40px 20px;
+            border-bottom: 1px solid var(--gold-dim);
+            background: radial-gradient(circle at center, #151515 0%, #080808 100%);
         }
-        .badges {
-            margin-bottom: 20px;
-        }
-        .badges img {
-            margin: 0 5px;
-        }
-        .logo {
-            font-size: clamp(40px, 8vw, 80px);
+
+        .ascii-logo {
             color: var(--gold);
-            font-weight: bold;
-            letter-spacing: -2px;
-            margin: 0;
-            text-shadow: 0 0 20px rgba(212, 175, 55, 0.2);
+            white-space: pre;
+            font-size: clamp(4px, 1.2vw, 10px);
+            line-height: 1.1;
+            margin-bottom: 40px;
+            text-shadow: var(--glow);
+            animation: flicker 3s infinite;
         }
-        .slogan {
-            font-size: clamp(18px, 3vw, 24px);
-            color: #888;
-            font-style: italic;
-            margin-top: 10px;
+
+        @keyframes flicker {
+            0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% { opacity: 1; }
+            20%, 24%, 55% { opacity: 0.5; }
         }
-        .container {
-            max-width: 1000px;
-            margin: 0 auto;
-            padding: 60px 20px;
-        }
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 25px;
-            margin-top: 40px;
-        }
-        .card {
-            background: var(--accent);
-            padding: 30px;
-            border: 1px solid #333;
-            border-radius: 12px;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+        .terminal-box {
+            background: var(--surface);
+            border: 1px solid var(--gold-dim);
+            padding: 40px;
+            max-width: 900px;
+            width: 100%;
             position: relative;
-            overflow: hidden;
+            box-shadow: 0 10px 50px rgba(0,0,0,0.8);
         }
-        .card:hover {
-            transform: translateY(-10px);
-            border-color: var(--gold);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+
+        .terminal-header {
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            background: var(--gold-dim);
+            color: var(--bg);
+            font-weight: bold;
+            font-size: 11px;
+            padding: 4px 15px;
+            display: flex;
+            justify-content: space-between;
+            text-transform: uppercase;
         }
-        .card h3 {
+
+        h1 { font-size: clamp(24px, 5vw, 42px); color: var(--gold); margin: 20px 0 10px 0; }
+        .slogan { font-size: 18px; color: #888; margin-bottom: 30px; font-style: italic; }
+
+        nav {
+            margin-top: 30px;
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 12px 28px;
+            border: 1px solid var(--gold);
+            background: transparent;
             color: var(--gold);
-            margin-top: 0;
+            font-family: inherit;
+            font-weight: bold;
+            text-transform: uppercase;
+            text-decoration: none;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: inline-block;
+        }
+
+        .btn:hover {
+            background: var(--gold);
+            color: var(--bg);
+            box-shadow: 0 0 20px rgba(212, 175, 55, 0.4);
+            transform: translateY(-2px);
+        }
+
+        a { color: var(--gold); text-decoration: none; border-bottom: 1px solid transparent; transition: 0.2s; }
+        a:hover { border-bottom: 1px solid var(--gold); }
+
+        .caveman-toggle {
+            position: fixed;
+            top: 20px; right: 20px;
+            background: var(--surface);
+            border: 1px solid var(--gold-dim);
+            padding: 8px 15px;
+            font-size: 11px;
+            z-index: 10000;
             display: flex;
             align-items: center;
             gap: 10px;
+            box-shadow: var(--glow);
         }
-        .cta-container {
-            margin-top: 40px;
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 80px 20px;
         }
-        .cta {
-            background: var(--gold);
-            color: var(--bg);
-            padding: 18px 36px;
-            text-decoration: none;
-            font-weight: bold;
-            border-radius: 6px;
-            display: inline-block;
-            transition: all 0.2s;
+
+        section { margin-bottom: 120px; }
+        section h2 {
+            font-size: 16px;
             text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        .cta:hover { 
-            opacity: 0.9;
-            transform: scale(1.05);
-        }
-        code {
-            background: #000;
-            padding: 3px 8px;
-            border-radius: 4px;
+            letter-spacing: 3px;
+            border-bottom: 1px solid var(--gold-dim);
+            padding-bottom: 15px;
+            margin-bottom: 50px;
             color: var(--gold);
-            font-size: 0.9em;
+            display: flex;
+            align-items: center;
+            gap: 15px;
         }
-        pre {
-            background: #000;
-            padding: 15px;
-            border-radius: 8px;
-            overflow-x: auto;
+
+        section h2::before {
+            content: ">>";
+            color: var(--gold-dim);
+        }
+
+        .module-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 30px;
+        }
+
+        .module-card {
+            padding: 40px;
+            background: #111;
             border: 1px solid #222;
+            transition: all 0.3s;
         }
-        section { margin-bottom: 80px; }
-        h2 {
-            border-left: 4px solid var(--gold);
-            padding-left: 15px;
-            margin-bottom: 30px;
+
+        .module-card:hover {
+            border-color: var(--gold);
+            background: #151515;
+            transform: scale(1.02);
         }
+
+        .module-card h3 { color: var(--gold); margin-top: 0; font-size: 18px; margin-bottom: 20px; }
+
+        .sauce-terminal {
+            background: #050505;
+            padding: 30px;
+            border-left: 3px solid var(--gold);
+            font-size: 14px;
+        }
+
+        .line { margin-bottom: 10px; }
+        .prompt { color: var(--gold-dim); margin-right: 10px; }
+
+        .directory-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .dir-item {
+            padding: 15px;
+            border: 1px dashed #333;
+            font-size: 13px;
+        }
+
+        .dir-item strong { display: block; color: var(--gold); margin-bottom: 5px; }
+
         footer {
             text-align: center;
-            padding: 60px;
-            border-top: 1px solid #333;
-            color: #666;
-            background: #0a0a0a;
+            padding: 80px 20px;
+            border-top: 1px solid #222;
+            font-size: 11px;
+            color: #555;
+            background: #050505;
         }
-        .philosophy-box {
-            background: linear-gradient(145deg, #1a1a1a, #121212);
-            padding: 40px;
-            border-radius: 15px;
-            border: 1px solid var(--purple);
-            margin-top: 40px;
+
+        .caveman-active [data-caveman] { display: inline; }
+        .caveman-active [data-normal] { display: none; }
+        body:not(.caveman-active) [data-caveman] { display: none; }
+
+        @media (max-width: 600px) {
+            .ascii-logo { font-size: 3px; }
+            .terminal-box { padding: 20px; }
         }
     </style>
 </head>
 <body>
 
+<div class="caveman-toggle">
+    <span>SYSTEM_COMPRESSION</span>
+    <input type="checkbox" id="modeSwitch">
+</div>
+
 <header>
-    <div class="badges">
-        <img src="https://img.shields.io/badge/python-3.8%2B-blue" alt="Python">
-        <img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License">
-        <img src="https://img.shields.io/badge/Obsidian-v0.15.0%2B-7C4DFF" alt="Obsidian">
+    <div class="ascii-logo">
+    __  __ __________  __  _____________   ________    _________  ____  __________ 
+   / / / / ____/ __ \/  |/  / ____/ ___/  / ____/ /   /  _/ __ \/ __ \/ ____/ __ \
+  / /_/ / __/ / /_/ / /|_/ / __/  \__ \  / /   / /    / // /_/ / /_/ / __/ / /_/ /
+ / __  / /___/ _, _/ /  / / /___ ___/ / / /___/ /____/ // ____/ ____/ /___/ _, _/ 
+/_/ /_/_____/_/ |_/_/  /_/_____//____/  \____/_____/___/_/   /_/   /_____/_/ |_|  
     </div>
-    <div class="logo">⚡ HERMES CLIPPER</div>
-    <div class="slogan">"Too lazy to file it yourself? I got you."</div>
-    <div class="cta-container">
-        <a href="https://github.com/frostmute/hermes-clipper" class="cta">Get the Code</a>
+    
+    <div class="terminal-box">
+        <div class="terminal-header">
+            <span>SESSION: 2026-04-16</span>
+            <span><span style="display:inline-block;width:8px;height:8px;background:#0f0;border-radius:50%;margin-right:5px;box-shadow:0 0 10px #0f0;"></span>BRIDGE: ACTIVE</span>
+        </div>
+        <h1 data-normal="Agentic Ingestion Suite">Agentic Ingestion Suite</h1>
+        <h1 data-caveman="ME FEED BRAIN">ME FEED BRAIN</h1>
+        <p class="slogan" data-normal="Stop organizing your own mess. Let Hermes hunt.">Stop organizing your own mess. Let Hermes hunt.</p>
+        <p class="slogan" data-caveman="YOU HUNT. ME FILE. NO WASTE.">YOU HUNT. ME FILE. NO WASTE.</p>
+        
+        <nav>
+            <a href="#suite" class="btn">Modules</a>
+            <a href="#sauce" class="btn">Sauce</a>
+            <a href="#genesis" class="btn">Genesis</a>
+            <a href="#hub" class="btn">Directory</a>
+            <a href="https://github.com/frostmute/hermes-clipper" class="btn" style="border-color:var(--gold-bright);">GitHub</a>
+        </nav>
     </div>
 </header>
 
 <div class="container">
     <section id="mission">
-        <h2>Zero-Friction Ingestion</h2>
-        <p>Most webclippers are digital graveyards. <strong>Hermes Clipper</strong> is a Contextual Nutrient System. It offloads the mental tax of categorization and summarization to an LLM-native agent, ensuring your bookmarks actually contribute to your intelligence.</p>
+        <h2>01_MISSION_OBJECTIVE</h2>
+        <p data-normal="Most webclippers are digital graveyards. Hermes Clipper is a Contextual Nutrient System. It turns web-clipping into inherent usage: as you save data, the Agent absorbs it, cross-links it, and prepares it for your next task.">Most webclippers are digital graveyards. Hermes Clipper is a Contextual Nutrient System. It turns web-clipping into inherent usage: as you save data, the Agent absorbs it, cross-links it, and prepares it for your next task.</p>
+        <p data-caveman="CLIPPERS ARE GRAVES. HERMES IS BRAIN FOOD. FEED AGENT. AGENT GET SHARP.">CLIPPERS ARE GRAVES. HERMES IS BRAIN FOOD. FEED AGENT. AGENT GET SHARP.</p>
     </section>
 
     <section id="suite">
-        <h2>The Suite</h2>
-        <div class="grid">
-            <div class="card">
+        <h2>02_THE_SUITE</h2>
+        <div class="module-grid">
+            <div class="module-card">
                 <h3>🧠 The Brain</h3>
-                <p>The <code>clipping</code> skill for Hermes Agent. Procedural logic for autonomous research and vault organization.</p>
+                <p data-normal="The core 'clipping' skill. Intelligent research, categorization, and memory updates.">The core 'clipping' skill. Intelligent research, categorization, and memory updates.</p>
+                <p data-caveman="AGENT BRAIN. KNOW ALL. FILE FAST.">AGENT BRAIN. KNOW ALL. FILE FAST.</p>
+                <a href="https://github.com/frostmute/hermes-clipper/tree/master/hermes_skills">View Skill &raquo;</a>
             </div>
-            <div class="card">
+            <div class="module-card">
                 <h3>📡 The Bridge</h3>
-                <p>A FastAPI local gateway with <strong>X-API-Key</strong> security. Non-blocking async task tracking.</p>
+                <p data-normal="High-performance FastAPI gateway. Secure X-API-Key handling for remote deployment.">High-performance FastAPI gateway. Secure X-API-Key handling for remote deployment.</p>
+                <p data-caveman="SECURE PATH. BROWSER TO VAULT.">SECURE PATH. BROWSER TO VAULT.</p>
+                <a href="https://github.com/frostmute/hermes-clipper/blob/master/src/hermes_clipper/server.py">Source Code &raquo;</a>
             </div>
-            <div class="card">
+            <div class="module-card">
                 <h3>🛰️ The Scout</h3>
-                <p>Modern browser extension with "Quick Clip" and "Agent Research" modes. Void/Gold aesthetic.</p>
+                <p data-normal="Manifest V3 Extension. One-click link capture with async task tracking.">Manifest V3 Extension. One-click link capture with async task tracking.</p>
+                <p data-caveman="CLICK. GRAB. DONE.">CLICK. GRAB. DONE.</p>
+                <a href="https://github.com/frostmute/hermes-clipper/tree/master/extension">View Extension &raquo;</a>
             </div>
-            <div class="card">
-                <h3>🔨 The Hand</h3>
-                <p>Powerful CLI for manual operations and automation. Built-in <strong>Caveman Mode</strong> compression.</p>
-            </div>
-            <div class="card">
+            <div class="module-card">
                 <h3>🏡 The Garden</h3>
-                <p>Obsidian plugin with 1-click ribbon command and real-time status polling.</p>
+                <p data-normal="Obsidian Plugin. Ribbon icon for deep synthesis and automatic file migration.">Obsidian Plugin. Ribbon icon for deep synthesis and automatic file migration.</p>
+                <p data-caveman="FIX NOTE. MOVE FOLDER. CLEAN.">FIX NOTE. MOVE FOLDER. CLEAN.</p>
+                <a href="https://github.com/frostmute/hermes-clipper/tree/master/obsidian-plugin">View Plugin &raquo;</a>
             </div>
         </div>
     </section>
 
     <section id="sauce">
-        <h2>🍯 The Secret Sauce</h2>
-        <div class="grid">
-            <div class="card">
-                <h3>The Sieve</h3>
-                <p>We strip 80% of web junk (scripts/nav/footers) <strong>locally</strong> before the Agent ever sees it. Zero token waste.</p>
+        <h2>03_TECHNICAL_SAUCE</h2>
+        <div class="sauce-terminal">
+            <div class="line"><span class="prompt">#</span> <span data-normal="Initializing Efficiency Protocol...">Initializing Efficiency Protocol...</span><span data-caveman="START GRUNT.">START GRUNT.</span></div>
+            <div class="line"><span class="prompt">#</span> <span data-normal="Executing Local Pre-processing (The Sieve)...">Executing Local Pre-processing (The Sieve)...</span><span data-caveman="STRIP JUNK.">STRIP JUNK.</span></div>
+            <div class="line"><span class="prompt">#</span> <span style="color:#0f0;">DONE: 82% Payload Reduction.</span></div>
+            <div class="line"><span class="prompt">#</span> <span data-normal="Activating Caveman Mode (Linguistic Compression)...">Activating Caveman Mode (Linguistic Compression)...</span><span data-caveman="TALK SHORT.">TALK SHORT.</span></div>
+            <div class="line"><span class="prompt">#</span> <span style="color:#0f0;">DONE: 70% Token Savings.</span></div>
+            <div class="line"><span class="prompt">#</span> <span data-normal="Updating Agentic Flywheel...">Updating Agentic Flywheel...</span><span data-caveman="MAKE SMART.">MAKE SMART.</span></div>
+            <div class="line"><span class="prompt">#</span> <span style="color:var(--gold);">STATUS: AGENT COMPOUNDING AT PEAK CAPACITY.</span></div>
+        </div>
+        <p style="margin-top:20px; font-size:12px;"><a href="https://github.com/frostmute/hermes-clipper/blob/master/docs/THE_SAUCE.md">Read the Full Technical Breakdown &raquo;</a></p>
+    </section>
+
+    <section id="genesis">
+        <h2>04_GENESIS_LOG</h2>
+        <div class="directory-grid">
+            <div class="dir-item">
+                <strong>Part 1: The Death of Manual Clipping</strong>
+                <a href="https://github.com/frostmute/hermes-clipper/blob/master/docs/blog/01-death-of-manual-clipper.md">Read Deep-Dive &raquo;</a>
             </div>
-            <div class="card">
-                <h3>The Flywheel</h3>
-                <p>Usage = Intelligence. Every clip expands the Agent's context, making it sharper for your next task. We call it Agentic Nutrient.</p>
+            <div class="dir-item">
+                <strong>Part 2: The Bridge Pattern</strong>
+                <a href="https://github.com/frostmute/hermes-clipper/blob/master/docs/blog/02-the-bridge-pattern.md">Read Deep-Dive &raquo;</a>
             </div>
-            <div class="card">
-                <h3>The Proof</h3>
-                <p>Can usage prove capability? Yes. Check out our <a href="https://github.com/frostmute/hermes-clipper/blob/master/docs/BENCHMARK.md" style="color:var(--gold);">Benchmark Guide</a> to see it in action.</p>
+            <div class="dir-item">
+                <strong>Part 3: Smart Synthesis</strong>
+                <a href="https://github.com/frostmute/hermes-clipper/blob/master/docs/blog/03-smart-synthesis.md">Read Deep-Dive &raquo;</a>
+            </div>
+            <div class="dir-item">
+                <strong>Part 4: Caveman Tokens</strong>
+                <a href="https://github.com/frostmute/hermes-clipper/blob/master/docs/blog/04-caveman-tokens.md">Read Deep-Dive &raquo;</a>
             </div>
         </div>
     </section>
 
-    <section id="philosophy">
-        <div class="philosophy-box">
-            <h2>Agent-Growth Philosophy</h2>
-            <p>Every disparate tool you use is a "leak" in your Agent's intelligence. By clipping directly into the vault Hermes monitors, you compound its intelligence with zero extra friction. We don't just store data; we feed the machine.</p>
-            <p><em>Utilizing Caveman-speak to reduce token overhead by ~70%.</em></p>
+    <section id="hub">
+        <h2>05_RESOURCE_DIRECTORY</h2>
+        <div class="directory-grid">
+            <div class="dir-item">
+                <strong>Main Repo</strong>
+                <a href="https://github.com/frostmute/hermes-clipper">frostmute/hermes-clipper</a>
+            </div>
+            <div class="dir-item">
+                <strong>The Brain</strong>
+                <a href="https://github.com/frostmute/hermes-agent">Hermes Agent Ecosystem</a>
+            </div>
+            <div class="dir-item">
+                <strong>Compression</strong>
+                <a href="https://github.com/JuliusBrussee/caveman">Caveman Skill</a>
+            </div>
+            <div class="dir-item">
+                <strong>Target Vault</strong>
+                <a href="https://obsidian.md">Obsidian Official</a>
+            </div>
+            <div class="dir-item">
+                <strong>API Logic</strong>
+                <a href="https://fastapi.tiangolo.com">FastAPI Docs</a>
+            </div>
+            <div class="dir-item">
+                <strong>Local Sieve</strong>
+                <a href="https://www.crummy.com/software/BeautifulSoup/">BeautifulSoup4</a>
+            </div>
+            <div class="dir-item">
+                <strong>Benchmarking</strong>
+                <a href="https://github.com/frostmute/hermes-clipper/blob/master/docs/BENCHMARK.md">Capability Tests</a>
+            </div>
+            <div class="dir-item">
+                <strong>Credits</strong>
+                <a href="https://github.com/frostmute/hermes-clipper/blob/master/CREDITS.md">Full Attributions</a>
+            </div>
         </div>
-    </section>
-
-    <section id="quickstart">
-        <h2>Quick Start</h2>
-        <pre><code># Install CLI
-pip install -e .
-
-# Run Setup (Generates API Key)
-hermes-clip setup
-
-# Launch Bridge
-hermes-clip serve</code></pre>
     </section>
 </div>
 
 <footer>
-    <p>⚡ 2026 Hermes Clipper Suite. Stand on giants. Grunt often. 🌑</p>
+    <p>⚡ HERMES CLIPPER v0.1.0-ALPHA | EST. 2026</p>
+    <p>BUILT BY HUNTERS. FOR HUNTERS.</p>
+    <p style="margin-top:20px; opacity:0.3;">NO CLOUDS. NO LOGS. NO MERCY.</p>
 </footer>
+
+<script>
+    const modeSwitch = document.getElementById('modeSwitch');
+    modeSwitch.addEventListener('change', () => {
+        document.body.classList.toggle('caveman-active', modeSwitch.checked);
+    });
+</script>
 
 </body>
 </html>
