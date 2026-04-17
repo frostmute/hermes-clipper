@@ -23,3 +23,10 @@ classifiers = [
 
 [project.scripts]
 hermes-clip = "hermes_clipper.main:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["hermes_clipper*"]
