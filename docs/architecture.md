@@ -15,7 +15,7 @@
     - **Location:** `src/hermes_clipper/main.py` (Installed via `pip -e .`)
     - **Features:** Setup wizard, custom templates, direct URL extraction (requests/bs4), conflict resolution (unique/merge/overwrite), and JSON output with Obsidian URIs.
 - **`clipping` Skill:**
-    - **Location:** `hermes_skills/clipping/`
+    - **Location:** `skills/clipping/`
     - **Function:** Logic for Hermes to research, search the vault for context, and intelligently file new clippings.
 - **Bridge Server (Phase 2):**
     - **Implementation:** FastAPI server running on `localhost:8088`.

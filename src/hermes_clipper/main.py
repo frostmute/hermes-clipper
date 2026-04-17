@@ -77,19 +77,27 @@ def setup_vault_index(vault_path):
 
 def deploy_skill():
     hermes_skill_dir = Path.home() / ".hermes" / "skills" / "note-taking" / "clipping"
-    repo_skill = Path(__file__).parent.parent.parent / "hermes_skills" / "clipping" / "SKILL.md"
     
-    # Try alternate location if not found relative to __file__
-    if not repo_skill.exists():
-        repo_skill = Path.home() / "hermes-clipper" / "hermes_skills" / "clipping" / "SKILL.md"
+    # Discovery chain: check common repo/install locations
+    candidates = [
+        Path(__file__).parent.parent.parent / "skills" / "clipping" / "SKILL.md",
+        Path.home() / "hermes-clipper" / "skills" / "clipping" / "SKILL.md",
+        Path("/usr/local/share/hermes-clipper/skills/clipping/SKILL.md"),
+    ]
+    
+    repo_skill = None
+    for candidate in candidates:
+        if candidate.exists():
+            repo_skill = candidate
+            break
 
-    if repo_skill.exists():
+    if repo_skill:
         hermes_skill_dir.mkdir(parents=True, exist_ok=True)
         import shutil
         shutil.copy(repo_skill, hermes_skill_dir / "SKILL.md")
         print_header(f"Clipper Skill deployed to {hermes_skill_dir}.")
     else:
-        print_error(f"Skill file not found at {repo_skill}. Deployment skipped.")
+        print_error("Skill file (SKILL.md) not found in expected locations. Deployment skipped.")
 
 def setup_wizard():
     print(HERMES_LOGO)
