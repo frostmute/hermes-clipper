@@ -1,4 +1,4 @@
-# The Friction of Filing: Why Most Bookmarks Go to Die
+# The Friction of Filing
 
 ### Genesis Part 1
 *Reflecting on the move from static storage to agentic partnership.*
