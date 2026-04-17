@@ -10,9 +10,18 @@ const DEFAULT_SETTINGS: ClipperSettings = {
 
 export default class HermesClipperPlugin extends Plugin {
 	settings: ClipperSettings;
+	statusBarItemEl: HTMLElement;
 
 	async onload() {
 		await this.loadSettings();
+
+		this.statusBarItemEl = this.addStatusBarItem();
+		this.statusBarItemEl.setText('Hermes: Idle');
+
+		// Add Ribbon Icon (Toolbar Button)
+		this.addRibbonIcon('brain', 'Hermes: Synthesize & Organize', (evt: MouseEvent) => {
+			this.synthesizeNote();
+		});
 
 		this.addCommand({
 			id: 'hermes-synthesize-current',
@@ -29,27 +38,29 @@ export default class HermesClipperPlugin extends Plugin {
 		}
 
 		new Notice(`Dispatching Hermes to synthesize: ${activeFile.name}...`);
+		this.statusBarItemEl.setText('Hermes: 🧠 Synthesizing...');
 
 		try {
-			// Note: This requires the bridge server to be running.
 			const response = await fetch(`${this.settings.bridgeUrl}/agent/synthesize`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
-					path: activeFile.path, // Bridge needs absolute path if possible, or vault relative
+					path: activeFile.path,
 					prompt: "Synthesize and refine this note."
 				})
 			});
 
 			const data = await response.json();
 			if (data.status === 'success') {
-				new Notice('Synthesis complete! Hermes is updating your vault.');
+				new Notice('Synthesis complete!');
 			} else {
 				new Notice('Hermes failed: ' + data.message);
 			}
 		} catch (err) {
 			new Notice('Failed to connect to Hermes Bridge.');
 			console.error(err);
+		} finally {
+			this.statusBarItemEl.setText('Hermes: Idle');
 		}
 	}
 

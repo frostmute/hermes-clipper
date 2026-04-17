@@ -207,9 +207,14 @@ def agent_clip(url, folder="Clippings", extra_prompt=None):
         }
 
 def synthesize_clip(note_path, extra_prompt=None):
-    """Refines and cross-links an existing note using Hermes Agent."""
+    """Refines, cross-links, and RE-CATEGORIZES an existing note using Hermes Agent."""
     abs_path = os.path.abspath(note_path)
-    prompt = f"Read the note at {abs_path}. Research the topic if necessary, clean up the formatting, and cross-link it to other relevant notes in my Obsidian vault. Preserve the original meaning but make it 'vault-ready'."
+    prompt = f"""Read the note at {abs_path}. 
+1. Research topic if needed.
+2. Refine content & cross-link within vault.
+3. IMPORTANT: Move this file from its current location to a more appropriate permanent folder in my Obsidian vault (e.g., Reference/, Research/, Daily/, etc). 
+4. Update the note with 'status: permanent' and add a 'Synthesized' tag.
+"""
     if extra_prompt:
         prompt += f" Additional instructions: {extra_prompt}"
 
