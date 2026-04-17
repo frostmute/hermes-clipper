@@ -1,0 +1,7 @@
+# Ruff configuration for Hermes Clipper
+line-length = 120
+target-version = "py310"
+
+[lint]
+select = ["E", "F", "W", "I"]
+ignore = ["E722"] # Allow bare except in targeted spots
