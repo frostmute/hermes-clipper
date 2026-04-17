@@ -206,6 +206,35 @@ def agent_clip(url, folder="Clippings", extra_prompt=None):
             "message": f"Hermes Agent failed: {e.stderr or str(e)}"
         }
 
+def synthesize_clip(note_path, extra_prompt=None):
+    """Refines and cross-links an existing note using Hermes Agent."""
+    abs_path = os.path.abspath(note_path)
+    prompt = f"Read the note at {abs_path}. Research the topic if necessary, clean up the formatting, and cross-link it to other relevant notes in my Obsidian vault. Preserve the original meaning but make it 'vault-ready'."
+    if extra_prompt:
+        prompt += f" Additional instructions: {extra_prompt}"
+
+    print(f"🧠 Dispatching Hermes to synthesize: {note_path}...")
+    
+    cmd = [
+        "hermes", "chat", "-q", prompt,
+        "-t", "browser,terminal",
+        "-s", "clipping",
+        "--yolo"
+    ]
+    
+    try:
+        result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+        return {
+            "status": "success",
+            "agent_output": result.stdout,
+            "message": "Synthesis complete."
+        }
+    except subprocess.CalledProcessError as e:
+        return {
+            "status": "error",
+            "message": f"Synthesis failed: {e.stderr or str(e)}"
+        }
+
 def main():
     parser = argparse.ArgumentParser(description="Hermes Clipper for Obsidian")
     subparsers = parser.add_subparsers(dest="command")
@@ -223,6 +252,11 @@ def main():
     agent_parser.add_argument("--url", required=True)
     agent_parser.add_argument("--folder", default="Clippings")
     agent_parser.add_argument("--prompt", help="Extra instructions for the agent")
+
+    # Synthesize command
+    synth_parser = subparsers.add_parser("synthesize", help="Refine an existing note with Hermes")
+    synth_parser.add_argument("--path", required=True)
+    synth_parser.add_argument("--prompt", help="Extra instructions for the agent")
 
     # Clip command
     clip_parser = subparsers.add_parser("clip", help="Clip content to Obsidian")
@@ -244,6 +278,9 @@ def main():
         start_server(host=args.host, port=args.port)
     elif args.command == "agent-clip":
         result = agent_clip(args.url, args.folder, args.prompt)
+        print(json.dumps(result, indent=2))
+    elif args.command == "synthesize":
+        result = synthesize_clip(args.path, args.prompt)
         print(json.dumps(result, indent=2))
     elif args.command == "clip":
         title, content = args.title, args.content

@@ -31,6 +31,10 @@ class AgentClipRequest(BaseModel):
     folder: Optional[str] = "Clippings"
     prompt: Optional[str] = None
 
+class SynthesizeRequest(BaseModel):
+    path: str
+    prompt: Optional[str] = None
+
 @app.get("/")
 async def root():
     return {"status": "online", "message": "Hermes Clipper Bridge is running."}
@@ -64,6 +68,18 @@ async def agent_clip_endpoint(request: AgentClipRequest):
         result = run_agent_clip(
             url=request.url,
             folder=request.folder,
+            extra_prompt=request.prompt
+        )
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/agent/synthesize")
+async def synthesize_endpoint(request: SynthesizeRequest):
+    try:
+        from .main import synthesize_clip
+        result = synthesize_clip(
+            note_path=request.path,
             extra_prompt=request.prompt
         )
         return result
