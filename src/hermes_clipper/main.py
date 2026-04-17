@@ -67,19 +67,26 @@ def setup_wizard():
     CONFIG_DIR.mkdir(parents=True, exist_ok=True)
     config = load_config()
     
-    current_vault = config.get("vault_path") or os.environ.get("OBSIDIAN_VAULT_PATH", "")
-    vault_path = input(f"Enter your Obsidian Vault path [{current_vault}]: ").strip() or current_vault
+    # Use generic default if nothing found in config or env
+    default_vault = os.path.expanduser("~/Documents/ObsidianVault")
+    current_vault = config.get("vault_path") or os.environ.get("OBSIDIAN_VAULT_PATH", default_vault)
     
-    if not vault_path:
-        print_error("Vault path is required.")
-        return
-
+    print(f"Current Obsidian Vault path: {HERMES_GOLD}{current_vault}{RESET}")
+    vault_path = input(f"Enter new path (leave blank to keep): ").strip() or current_vault
+    
     vault_path = os.path.expanduser(vault_path)
     if not os.path.exists(vault_path):
         print(f"Warning: Path {vault_path} does not exist. Creating it...")
         os.makedirs(vault_path, exist_ok=True)
     
     config["vault_path"] = vault_path
+    
+    # Sync to Hermes environment
+    hermes_env = Path.home() / ".hermes" / ".env"
+    if hermes_env.exists():
+        with open(hermes_env, "a") as f:
+            f.write(f'\nOBSIDIAN_VAULT_PATH="{vault_path}"\n')
+        print_header("Synced vault path to Hermes Agent.")
     
     if "api_key" not in config:
         config["api_key"] = secrets.token_hex(16)
