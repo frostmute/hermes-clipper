@@ -166,18 +166,63 @@ def clip(url, title, content, folder="Clippings", tags=None, metadata=None, mode
     # Output result
     vault_name = os.path.basename(vault)
     relative_path = os.path.relpath(path, vault)
-    print(json.dumps({
+    result = {
         "status": "success",
         "path": path,
         "uri": f"obsidian://open?vault={vault_name}&file={relative_path}"
-    }))
+    }
+    print(json.dumps(result))
+    return result
 
-if __name__ == "__main__":
+def agent_clip(url, folder="Clippings", extra_prompt=None):
+    """Delegates a research and clipping task to the Hermes Agent."""
+    prompt = f"Navigate to {url}, extract its content, and use the 'hermes-clip' tool to save it to my Obsidian vault."
+    if folder:
+        prompt += f" Organize it under the '{folder}' folder."
+    if extra_prompt:
+        prompt += f" Additional instructions: {extra_prompt}"
+
+    print(f"🚀 Dispatching Hermes Agent to research: {url}...")
+    
+    # We use -q for non-interactive, -t for toolsets, -s for the clipping skill, and --yolo to bypass prompts
+    cmd = [
+        "hermes", "chat", "-q", prompt,
+        "-t", "browser,terminal",
+        "-s", "clipping",
+        "--yolo"
+    ]
+    
+    try:
+        # Run Hermes and capture output
+        result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+        return {
+            "status": "success",
+            "agent_output": result.stdout,
+            "message": "Hermes Agent task completed."
+        }
+    except subprocess.CalledProcessError as e:
+        return {
+            "status": "error",
+            "message": f"Hermes Agent failed: {e.stderr or str(e)}"
+        }
+
+def main():
     parser = argparse.ArgumentParser(description="Hermes Clipper for Obsidian")
     subparsers = parser.add_subparsers(dest="command")
 
     # Setup command
     subparsers.add_parser("setup", help="Run the configuration wizard")
+
+    # Serve command
+    serve_parser = subparsers.add_parser("serve", help="Start the local bridge server")
+    serve_parser.add_argument("--host", default="127.0.0.1")
+    serve_parser.add_argument("--port", type=int, default=8088)
+
+    # Agent Clip command
+    agent_parser = subparsers.add_parser("agent-clip", help="Dispatch Hermes to research and clip a URL")
+    agent_parser.add_argument("--url", required=True)
+    agent_parser.add_argument("--folder", default="Clippings")
+    agent_parser.add_argument("--prompt", help="Extra instructions for the agent")
 
     # Clip command
     clip_parser = subparsers.add_parser("clip", help="Clip content to Obsidian")
@@ -194,6 +239,12 @@ if __name__ == "__main__":
 
     if args.command == "setup":
         setup_wizard()
+    elif args.command == "serve":
+        from hermes_clipper.server import start_server
+        start_server(host=args.host, port=args.port)
+    elif args.command == "agent-clip":
+        result = agent_clip(args.url, args.folder, args.prompt)
+        print(json.dumps(result, indent=2))
     elif args.command == "clip":
         title, content = args.title, args.content
         if args.direct:
@@ -208,3 +259,6 @@ if __name__ == "__main__":
         clip(args.url, title, content, args.folder, args.tags, args.metadata, args.mode)
     else:
         parser.print_help()
+
+if __name__ == "__main__":
+    main()

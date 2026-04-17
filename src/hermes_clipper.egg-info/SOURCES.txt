@@ -1,0 +1,10 @@
+README.md
+pyproject.toml
+src/hermes_clipper/main.py
+src/hermes_clipper/server.py
+src/hermes_clipper.egg-info/PKG-INFO
+src/hermes_clipper.egg-info/SOURCES.txt
+src/hermes_clipper.egg-info/dependency_links.txt
+src/hermes_clipper.egg-info/entry_points.txt
+src/hermes_clipper.egg-info/requires.txt
+src/hermes_clipper.egg-info/top_level.txt
