@@ -1,5 +1,6 @@
 import uvicorn
 from fastapi import FastAPI, HTTPException, BackgroundTasks
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional, List
 import os
@@ -7,6 +8,14 @@ import json
 from .main import clip as run_clip, agent_clip as run_agent_clip
 
 app = FastAPI(title="Hermes Clipper Bridge")
+
+# Allow CORS for browser extension
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 class ClipRequest(BaseModel):
     url: str

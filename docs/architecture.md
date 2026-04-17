@@ -8,19 +8,24 @@
 ### 1. Environment Configuration
 - **Vault Integration:** Established `/home/frost/Endeavor` as the primary Obsidian vault.
 - **Hermes Setup:** Configured `OBSIDIAN_VAULT_PATH` in `.hermes/.env` to allow agent-level access to the vault.
+- **Local Config:** Created `~/.config/hermes-clipper/` for persistent settings and custom templates.
 
 ### 2. Core Components Built
-- **`hermes-clip` CLI Tool:**
-    - **Location:** `~/.local/bin/hermes-clip`
-    - **Function:** Handles YAML frontmatter generation, filename sanitization, duplicate prevention, and folder creation.
-    - **Language:** Python 3.
+- **`hermes-clip` CLI Tool (Advanced):**
+    - **Location:** `src/hermes_clipper/main.py` (Installed via `pip -e .`)
+    - **Features:** Setup wizard, custom templates, direct URL extraction (requests/bs4), conflict resolution (unique/merge/overwrite), and JSON output with Obsidian URIs.
 - **`clipping` Skill:**
-    - **Location:** `.hermes/hermes-agent/skills/note-taking/clipping/`
-    - **Function:** Provides Hermes with the procedural logic to browse, extract content, determine appropriate categorization (sub-folders), and execute the clip.
+    - **Location:** `hermes_skills/clipping/`
+    - **Function:** Logic for Hermes to research, search the vault for context, and intelligently file new clippings.
+- **Bridge Server (Phase 2):**
+    - **Implementation:** FastAPI server running on `localhost:8088`.
+    - **Endpoints:**
+        - `POST /clip`: Direct clipping of provided content.
+        - `POST /agent/clip`: Dispatches a background Hermes Agent for autonomous research and clipping ("Agent-Mode").
 
-### 3. Verified Workflow
-- **Test Case:** "Clip the Obsidian Plugin API documentation."
-- **Outcome:** Hermes autonomously searched, extracted the `Plugin` class documentation, and filed it under `Reference/Obsidian/` in the vault with correct metadata.
+### 3. Source Control
+- **GitHub:** Private repository initialized at `frostmute/hermes-clipper`.
+- **Structure:** Clean Python package structure ready for public distribution.
 
 ---
 
@@ -28,29 +33,26 @@
 
 ### Phase 1: Local CLI & Skill (Complete)
 - Standalone CLI tool and Hermes-compatible skill.
-- Requirement: User manually sets `OBSIDIAN_VAULT_PATH`.
 
-### Phase 2: The "Bridge" (Next Step)
-- **Goal:** Allow external triggers (like a browser extension) to talk to the local Hermes instance.
-- **Implementation:** A lightweight local server (FastAPI or Node.js) listening on a local port (e.g., `localhost:8088`).
-- **Endpoint:** `POST /clip` accepting `{ url, title, content }`.
-- **Action:** The bridge executes `hermes chat -q "..." -s clipping` or calls the `clipping` skill directly via RPC.
+### Phase 2: The "Bridge" (Complete)
+- FastAPI server bridging external triggers to the Hermes Agent.
+- Added **Agent-Mode** for autonomous multi-turn research tasks.
 
-### Phase 3: Browser Extension
+### Phase 3: Browser Extension (Next Step)
 - **Function:** A "One-Click" button in Chrome/Firefox.
-- **Logic:** Extracts the page Markdown (using a library like `Turndown`) and sends it to the Local Bridge.
-- **Key Differentiator:** The extension doesn't need complex settings; it just sends data to Hermes, who decides where it goes.
+- **Logic:** Extracts the page Markdown and sends it to the Local Bridge.
+- **Integration:** Will support both "Quick Clip" and "Agent Research" modes.
 
 ---
 
 ## 📅 Roadmap to Public Release
 
-1.  **Package the CLI:** Create a `pip` installable package for `hermes-clip`.
-2.  **Formalize the Skill:** Submit the `clipping` skill to the **Hermes Skills Hub**.
-3.  **Bridge Server:** Develop a single-command bridge (e.g., `hermes-clip server`).
-4.  **Extension Store:** Develop and publish the browser extension.
+1.  **Refine Agent Prompts:** Fine-tune the "research" prompt for better autonomous organization.
+2.  **Formalize the Skill:** Submit to the **Hermes Skills Hub**.
+3.  **Bridge Improvements:** Add background task queue for long-running agent tasks.
+4.  **Extension Development:** Build and publish the browser extension.
 
 ## 💡 Design Philosophy
-- **Agent-First:** The user should never have to pick a folder. Hermes should know where it belongs based on their existing vault structure and `MEMORY.md`.
-- **Zero-Config (Extension):** The browser extension should only require the "Bridge URL" (defaulting to localhost).
-- **Privacy:** All processing happens locally or via the user's configured LLM provider in Hermes.
+- **Agent-First:** Hermes knows where your data belongs better than you do.
+- **Zero-Config:** One-click from the browser, agent handles the rest.
+- **Obsidian Native:** Deep integration with vault structures and Wikilinks.

@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body {
+      width: 200px;
+      padding: 10px;
+      font-family: sans-serif;
+      background: #1e1e1e;
+      color: #eee;
+    }
+    .btn {
+      display: block;
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 8px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+      text-align: center;
+    }
+    .btn-primary { background: #4a90e2; color: white; }
+    .btn-agent { background: #7c4dff; color: white; }
+    .btn:hover { opacity: 0.9; }
+    #status {
+      font-size: 12px;
+      margin-top: 10px;
+      color: #aaa;
+    }
+  </style>
+</head>
+<body>
+  <h3>Hermes Clipper</h3>
+  <button id="clipBtn" class="btn btn-primary">Quick Clip</button>
+  <button id="agentBtn" class="btn btn-agent">Agent Research</button>
+  <div id="status">Ready.</div>
+  <script src="popup.js"></script>
+</body>
+</html>
