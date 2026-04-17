@@ -3,108 +3,159 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>⚡ Hermes Clipper - Stop Organizing Your Own Mess</title>
+    <title>⚡ Hermes Clipper - Intelligent Agentic Web Clipping</title>
     <style>
         :root {
             --bg: #121212;
             --gold: #d4af37;
             --text: #e0e0e0;
             --accent: #1f1f1f;
+            --purple: #7c4dff;
         }
         body {
             background-color: var(--bg);
             color: var(--text);
-            font-family: 'Segoe UI', system-ui, sans-serif;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
             margin: 0;
             padding: 0;
             line-height: 1.6;
         }
         header {
-            height: 100vh;
+            min-height: 80vh;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             text-align: center;
             border-bottom: 2px solid var(--gold);
+            background: radial-gradient(circle at center, #1a1a1a 0%, #121212 100%);
+        }
+        .badges {
+            margin-bottom: 20px;
+        }
+        .badges img {
+            margin: 0 5px;
         }
         .logo {
-            font-size: 80px;
+            font-size: clamp(40px, 8vw, 80px);
             color: var(--gold);
             font-weight: bold;
             letter-spacing: -2px;
-            margin-bottom: 0;
+            margin: 0;
+            text-shadow: 0 0 20px rgba(212, 175, 55, 0.2);
         }
         .slogan {
-            font-size: 24px;
+            font-size: clamp(18px, 3vw, 24px);
             color: #888;
             font-style: italic;
+            margin-top: 10px;
         }
         .container {
-            max-width: 900px;
+            max-width: 1000px;
             margin: 0 auto;
-            padding: 40px 20px;
+            padding: 60px 20px;
         }
         .grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
             margin-top: 40px;
         }
         .card {
             background: var(--accent);
-            padding: 20px;
+            padding: 30px;
             border: 1px solid #333;
-            border-radius: 8px;
-            transition: transform 0.2s, border-color 0.2s;
+            border-radius: 12px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
         }
         .card:hover {
-            transform: translateY(-5px);
+            transform: translateY(-10px);
             border-color: var(--gold);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
         .card h3 {
             color: var(--gold);
             margin-top: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .cta-container {
+            margin-top: 40px;
         }
         .cta {
             background: var(--gold);
             color: var(--bg);
-            padding: 15px 30px;
+            padding: 18px 36px;
             text-decoration: none;
             font-weight: bold;
-            border-radius: 4px;
+            border-radius: 6px;
             display: inline-block;
-            margin-top: 30px;
-            transition: opacity 0.2s;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
-        .cta:hover { opacity: 0.9; }
+        .cta:hover { 
+            opacity: 0.9;
+            transform: scale(1.05);
+        }
         code {
             background: #000;
-            padding: 2px 6px;
+            padding: 3px 8px;
             border-radius: 4px;
             color: var(--gold);
+            font-size: 0.9em;
         }
-        section { margin-bottom: 60px; }
+        pre {
+            background: #000;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid #222;
+        }
+        section { margin-bottom: 80px; }
+        h2 {
+            border-left: 4px solid var(--gold);
+            padding-left: 15px;
+            margin-bottom: 30px;
+        }
         footer {
             text-align: center;
-            padding: 40px;
+            padding: 60px;
             border-top: 1px solid #333;
             color: #666;
+            background: #0a0a0a;
+        }
+        .philosophy-box {
+            background: linear-gradient(145deg, #1a1a1a, #121212);
+            padding: 40px;
+            border-radius: 15px;
+            border: 1px solid var(--purple);
+            margin-top: 40px;
         }
     </style>
 </head>
 <body>
 
 <header>
+    <div class="badges">
+        <img src="https://img.shields.io/badge/python-3.8%2B-blue" alt="Python">
+        <img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License">
+        <img src="https://img.shields.io/badge/Obsidian-v0.15.0%2B-7C4DFF" alt="Obsidian">
+    </div>
     <div class="logo">⚡ HERMES CLIPPER</div>
-    <div class="slogan">"Too busy to organize your own mess? I got you."</div>
-    <a href="https://github.com/frostmute/hermes-clipper" class="cta">Hunt Code on GitHub</a>
+    <div class="slogan">"Too lazy to file it yourself? I got you."</div>
+    <div class="cta-container">
+        <a href="https://github.com/frostmute/hermes-clipper" class="cta">Get the Code</a>
+    </div>
 </header>
 
 <div class="container">
-    <section id="what">
-        <h2>What is this?</h2>
-        <p>A decentralized suite of tools for **intelligent web clipping** to Obsidian. We don't just "clip" text; we dispatch an agent to research, synthesize, and organize your data while you're busy hunting bigger game.</p>
+    <section id="mission">
+        <h2>Zero-Friction Ingestion</h2>
+        <p>Most webclippers are digital graveyards. <strong>Hermes Clipper</strong> is a Contextual Nutrient System. It offloads the mental tax of categorization and summarization to an LLM-native agent, ensuring your bookmarks actually contribute to your intelligence.</p>
     </section>
 
     <section id="suite">
@@ -112,46 +163,50 @@
         <div class="grid">
             <div class="card">
                 <h3>🧠 The Brain</h3>
-                <p>The <code>clipping</code> skill for Hermes Agent. Handles research, categorization, and cross-linking.</p>
+                <p>The <code>clipping</code> skill for Hermes Agent. Procedural logic for autonomous research and vault organization.</p>
             </div>
             <div class="card">
                 <h3>📡 The Bridge</h3>
-                <p>A FastAPI local server that talks to browsers and plugins. Secure and efficient.</p>
+                <p>A FastAPI local gateway with <strong>X-API-Key</strong> security. Non-blocking async task tracking.</p>
             </div>
             <div class="card">
                 <h3>🛰️ The Scout</h3>
-                <p>One-click browser extension (Chrome/Firefox). Zero-config link capture.</p>
+                <p>Modern browser extension with "Quick Clip" and "Agent Research" modes. Void/Gold aesthetic.</p>
             </div>
             <div class="card">
                 <h3>🔨 The Hand</h3>
-                <p>The <code>hermes-clip</code> CLI. Powerful, standalone, and built for speed.</p>
+                <p>Powerful CLI for manual operations and automation. Built-in <strong>Caveman Mode</strong> compression.</p>
             </div>
             <div class="card">
                 <h3>🏡 The Garden</h3>
-                <p>The Obsidian plugin. Ribbon icon for 1-click synthesis and status monitoring.</p>
+                <p>Obsidian plugin with 1-click ribbon command and real-time status polling.</p>
             </div>
         </div>
     </section>
 
-    <section id="deploy">
-        <h2>Deployment Options</h2>
-        <p>Run it all locally on your machine, or put the <strong>Bridge</strong> on a dedicated server to clip from multiple devices. It's your second brain; we just keep the lights on.</p>
-        <code>hermes-clip serve --host 0.0.0.0 --port 8088</code>
-    </section>
-
     <section id="philosophy">
-        <h2>Agent-Growth Philosophy</h2>
-        <p>Most clippers are silos. Hermes Clipper is a <strong>Contextual Nutrient System</strong>. Every clip you save expands the Agent's context, making it sharper, faster, and more integrated into your life. We utilize the <a href="https://github.com/JuliusBrussee/caveman" style="color:var(--gold);">Caveman Skill</a> to ensure this intelligence compounding happens at 70% lower token costs.</p>
+        <div class="philosophy-box">
+            <h2>Agent-Growth Philosophy</h2>
+            <p>Every disparate tool you use is a "leak" in your Agent's intelligence. By clipping directly into the vault Hermes monitors, you compound its intelligence with zero extra friction. We don't just store data; we feed the machine.</p>
+            <p><em>Utilizing Caveman-speak to reduce token overhead by ~70%.</em></p>
+        </div>
     </section>
 
-    <section id="credits">
-        <h2>Standing on Giants</h2>
-        <p>Built with <a href="https://fastapi.tiangolo.com/" style="color:var(--gold);">FastAPI</a>, <a href="https://www.crummy.com/software/BeautifulSoup/" style="color:var(--gold);">BeautifulSoup</a>, and the <a href="https://github.com/frostmute/hermes-agent" style="color:var(--gold);">Hermes Agent</a> ecosystem.</p>
+    <section id="quickstart">
+        <h2>Quick Start</h2>
+        <pre><code># Install CLI
+pip install -e .
+
+# Run Setup (Generates API Key)
+hermes-clip setup
+
+# Launch Bridge
+hermes-clip serve</code></pre>
     </section>
 </div>
 
 <footer>
-    <p>⚡ 2026 Hermes Clipper. Sarcasm is free; tokens are not. 🌑</p>
+    <p>⚡ 2026 Hermes Clipper Suite. Stand on giants. Grunt often. 🌑</p>
 </footer>
 
 </body>
