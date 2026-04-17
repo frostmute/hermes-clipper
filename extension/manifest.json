@@ -4,6 +4,11 @@
   "version": "0.1.0",
   "description": "Intelligent web clipping for Obsidian via Hermes Agent.",
   "permissions": ["activeTab", "scripting"],
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "hermes-clipper@frostmute.io"
+    }
+  },
   "action": {
     "default_popup": "popup.html"
   },

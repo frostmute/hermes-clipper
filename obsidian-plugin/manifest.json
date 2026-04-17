@@ -1,0 +1,11 @@
+{
+  "id": "hermes-clipper",
+  "name": "Hermes Clipper",
+  "version": "0.1.0",
+  "minAppVersion": "1.7.0",
+  "description": "Agent-driven web clipping and autonomous note organization powered by Hermes Agent.",
+  "author": "frostmute",
+  "authorUrl": "https://github.com/frostmute",
+  "fundingUrl": "https://ko-fi.com/frostmute",
+  "isDesktopOnly": true
+}

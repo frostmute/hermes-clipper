@@ -106,6 +106,14 @@ Every clip you save expands your Agent's context. By integrating clipping into y
 
 ---
 
+## ☕ Support
+
+If Hermes Clipper has saved you a mountain of tokens or made your vault a better place, consider throwing some dollarbucks my way!
+
+[**Support on Ko-fi**](https://ko-fi.com/frostmute)
+
+---
+
 ## 📜 Credits & License
 
 - **Caveman Mode:** Methodology by [Julius Brussee](https://github.com/JuliusBrussee/caveman).
