@@ -25,6 +25,18 @@
 
 ---
 
+## 📖 Documentation
+
+Explore the technical depth of the Hermes Clipper ecosystem:
+
+- **[Architecture](docs/architecture.md):** Deep-dive into the Bridge Pattern and Agentic Ingestion.
+- **[The Secret Sauce](docs/THE_SAUCE.md):** How we achieve 75%+ token efficiency.
+- **[Benchmark](docs/BENCHMARK.md):** Empirical tests of Agent speed and accuracy.
+- **[Community & Inspirations](docs/COMMUNITY.md):** The giants we stand on.
+- **[Migration Guide](docs/MIGRATION.md):** Transitioning from Raindrop.io or Readwise.
+
+---
+
 ## 🛠 The Suite
 
 Hermes Clipper is composed of five modular components:
@@ -46,12 +58,13 @@ Hermes Clipper is composed of five modular components:
 
 ### Installation
 
-1. **Clone & Install CLI:**
+1. **Bootstrap local env:**
    ```bash
    git clone https://github.com/frostmute/hermes-clipper.git
    cd hermes-clipper
-   pip install -e .
+   ./scripts/bootstrap.sh
    ```
+   This creates `.venv`, installs editable, and links `hermes-clip` into `~/.local/bin/`.
 
 2. **Run Setup:**
    ```bash
