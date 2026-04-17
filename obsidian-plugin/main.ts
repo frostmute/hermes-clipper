@@ -2,10 +2,12 @@ import { Plugin, Notice, TFile, WorkspaceLeaf } from 'obsidian';
 
 interface ClipperSettings {
 	bridgeUrl: string;
+	apiKey: string;
 }
 
 const DEFAULT_SETTINGS: ClipperSettings = {
-	bridgeUrl: 'http://127.0.0.1:8088'
+	bridgeUrl: 'http://127.0.0.1:8088',
+	apiKey: ''
 }
 
 export default class HermesClipperPlugin extends Plugin {
@@ -36,13 +38,21 @@ export default class HermesClipperPlugin extends Plugin {
 			return;
 		}
 
+		if (!this.settings.apiKey) {
+			new Notice('Hermes: API Key missing. Check settings.');
+			return;
+		}
+
 		new Notice(`Hermes: Dispatching for ${activeFile.name}...`);
 		this.statusBarItemEl.setText('Hermes: 🧠 Synthesizing...');
 
 		try {
 			const response = await fetch(`${this.settings.bridgeUrl}/agent/synthesize`, {
 				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
+				headers: { 
+					'Content-Type': 'application/json',
+					'X-API-Key': this.settings.apiKey
+				},
 				body: JSON.stringify({
 					path: activeFile.path,
 					prompt: "Synthesize and organize."
@@ -53,7 +63,7 @@ export default class HermesClipperPlugin extends Plugin {
 			if (data.status === 'accepted') {
 				this.pollTask(data.task_id);
 			} else {
-				new Notice('Hermes rejected you: ' + data.message);
+				new Notice('Hermes rejected you: ' + (data.detail || data.message));
 				this.statusBarItemEl.setText('Hermes: Idle');
 			}
 		} catch (err) {
@@ -65,14 +75,14 @@ export default class HermesClipperPlugin extends Plugin {
 	async pollTask(taskId: string) {
 		const check = async () => {
 			try {
-				const response = await fetch(`${this.settings.bridgeUrl}/tasks/${taskId}`);
+				const response = await fetch(`${this.settings.bridgeUrl}/tasks/${taskId}`, {
+					headers: { 'X-API-Key': this.settings.apiKey }
+				});
 				const task = await response.json();
 
 				if (task.status === 'completed') {
 					this.statusBarItemEl.setText('Hermes: Idle');
 					new Notice('Hermes: Synthesis complete. Note moved.');
-					
-					// If Hermes moved the file, we should try to find it
 					if (task.result && task.result.path) {
 						this.openNewPath(task.result.path);
 					}
@@ -84,7 +94,7 @@ export default class HermesClipperPlugin extends Plugin {
 				}
 				return false;
 			} catch (err) {
-				return true; // Stop on error
+				return true;
 			}
 		};
 
@@ -94,11 +104,8 @@ export default class HermesClipperPlugin extends Plugin {
 	}
 
 	async openNewPath(absPath: string) {
-		// Convert absolute path to vault relative path
-		// Bridge returns absolute path, Obsidian needs vault relative
 		const vaultPath = (this.app.vault.adapter as any).getBasePath();
 		let relPath = absPath.replace(vaultPath, '').replace(/^\//, '');
-		
 		const file = this.app.vault.getAbstractFileByPath(relPath);
 		if (file instanceof TFile) {
 			this.app.workspace.getLeaf(true).openFile(file);

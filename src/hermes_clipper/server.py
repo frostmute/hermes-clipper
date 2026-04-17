@@ -2,24 +2,40 @@ import uvicorn
 import uuid
 import json
 import os
-from fastapi import FastAPI, HTTPException, BackgroundTasks
+from fastapi import FastAPI, HTTPException, BackgroundTasks, Header, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional, List, Dict
-from .main import clip as run_clip, agent_clip as run_agent_clip, synthesize_clip
+from .main import clip as run_clip, agent_clip as run_agent_clip, synthesize_clip, load_config
 
 # Global task storage
 tasks: Dict[str, dict] = {}
 
 app = FastAPI(title="Hermes Clipper Bridge")
 
-# Allow CORS for browser extension
+# Security: Restrict CORS to known origins
+# Chrome extension ID is usually unique but we allow wide local for Obsidian
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
+    allow_origins=[
+        "http://localhost",
+        "http://127.0.0.1",
+        "app://obsidian.md",
+    ],
+    allow_origin_regex="chrome-extension://.*",
+    allow_methods=["POST", "GET"],
     allow_headers=["*"],
 )
+
+async def verify_api_key(x_api_key: str = Header(...)):
+    config = load_config()
+    expected_key = config.get("api_key")
+    if not expected_key:
+        # Fallback if setup hasn't run yet, but security first
+        raise HTTPException(status_code=500, detail="Bridge not configured. Run 'hermes-clip setup'.")
+    if x_api_key != expected_key:
+        raise HTTPException(status_code=403, detail="Invalid API Key. Hermes is not impressed.")
+    return x_api_key
 
 class ClipRequest(BaseModel):
     url: str
@@ -47,10 +63,10 @@ async def root():
         "active_tasks": len(tasks)
     }
 
-@app.get("/tasks/{task_id}")
+@app.get("/tasks/{task_id}", dependencies=[Depends(verify_api_key)])
 async def get_task(task_id: str):
     if task_id not in tasks:
-        raise HTTPException(status_code=404, detail="Task not found. Did it even exist?")
+        raise HTTPException(status_code=404, detail="Task not found.")
     return tasks[task_id]
 
 def run_background_agent(task_id: str, func, **kwargs):
@@ -63,63 +79,28 @@ def run_background_agent(task_id: str, func, **kwargs):
         tasks[task_id]["status"] = "failed"
         tasks[task_id]["error"] = str(e)
 
-@app.post("/clip")
+@app.post("/clip", dependencies=[Depends(verify_api_key)])
 async def clip_endpoint(request: ClipRequest):
     try:
         tag_str = ",".join(request.tags) if request.tags else ""
         meta_json = json.dumps(request.metadata) if request.metadata else None
-        
-        result = run_clip(
-            url=request.url,
-            title=request.title,
-            content=request.content,
-            folder=request.folder,
-            tags=tag_str,
-            metadata=meta_json,
-            mode=request.mode
-        )
-        return result
+        return run_clip(request.url, request.title, request.content, request.folder, tag_str, meta_json, request.mode)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/agent/clip")
+@app.post("/agent/clip", dependencies=[Depends(verify_api_key)])
 async def agent_clip_endpoint(request: AgentClipRequest, background_tasks: BackgroundTasks):
     task_id = str(uuid.uuid4())
     tasks[task_id] = {"status": "queued", "type": "agent_clip", "url": request.url}
-    
-    background_tasks.add_task(
-        run_background_agent, 
-        task_id, 
-        run_agent_clip, 
-        url=request.url, 
-        folder=request.folder, 
-        extra_prompt=request.prompt
-    )
-    
-    return {
-        "status": "accepted", 
-        "task_id": task_id, 
-        "message": "Agent dispatched. Try not to get impatient."
-    }
+    background_tasks.add_task(run_background_agent, task_id, run_agent_clip, url=request.url, folder=request.folder, extra_prompt=request.prompt)
+    return {"status": "accepted", "task_id": task_id}
 
-@app.post("/agent/synthesize")
+@app.post("/agent/synthesize", dependencies=[Depends(verify_api_key)])
 async def synthesize_endpoint(request: SynthesizeRequest, background_tasks: BackgroundTasks):
     task_id = str(uuid.uuid4())
     tasks[task_id] = {"status": "queued", "type": "synthesize", "path": request.path}
-
-    background_tasks.add_task(
-        run_background_agent,
-        task_id,
-        synthesize_clip,
-        note_path=request.path,
-        extra_prompt=request.prompt
-    )
-
-    return {
-        "status": "accepted", 
-        "task_id": task_id, 
-        "message": "Synthesis started. Hermes is thinking deep thoughts."
-    }
+    background_tasks.add_task(run_background_agent, task_id, synthesize_clip, note_path=request.path, extra_prompt=request.prompt)
+    return {"status": "accepted", "task_id": task_id}
 
 def start_server(host: str = "127.0.0.1", port: int = 8088):
     from .main import HERMES_LOGO
