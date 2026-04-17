@@ -274,21 +274,24 @@ def clip(url, title, content, folder="Clippings", tags=None, metadata=None, mode
     print(json.dumps(result))
     return result
 
-def agent_clip(url, folder="Clippings", extra_prompt=None):
+def agent_clip(url, folder="Clippings", extra_prompt=None, mode="unique"):
     config = load_config()
     vault = config.get("vault_path") or os.environ.get("OBSIDIAN_VAULT_PATH")
     
-    if dup := check_duplicate(url, vault):
-        vault_name = os.path.basename(vault)
-        relative_path = os.path.relpath(dup, vault)
-        return {
-            "status": "exists", 
-            "path": dup, 
-            "uri": f"obsidian://open?vault={vault_name}&file={relative_path}"
-        }
+    if mode == "unique":
+        if dup := check_duplicate(url, vault):
+            vault_name = os.path.basename(vault)
+            relative_path = os.path.relpath(dup, vault)
+            return {
+                "status": "exists", 
+                "path": dup, 
+                "uri": f"obsidian://open?vault={vault_name}&file={relative_path}"
+            }
 
-    prompt = f"Clip {url} to Obsidian/{folder}. Note: read head (~4k chars) for categorization, then save full content."
-    if extra_prompt: prompt += f" Additional: {extra_prompt}"
+    prompt = f"Clip {url} to Obsidian/{folder} (mode: {mode})."
+    if extra_prompt: prompt += f" Note: {extra_prompt}"
+    if mode == "merge": prompt += " Since mode is merge, append new findings to the existing note if found."
+    
     print_header(f"Dispatching Agent: {url}")
     cmd = ["hermes", "chat", "-q", prompt, "-t", "browser,terminal", "-s", "clipping", "--yolo"]
     try:
@@ -320,6 +323,7 @@ def main():
     agent_parser.add_argument("--url", required=True)
     agent_parser.add_argument("--folder", default="Clippings")
     agent_parser.add_argument("--prompt", help="Extra instructions for the agent")
+    agent_parser.add_argument("--mode", choices=["unique", "merge"], default="unique")
     synth_parser = subparsers.add_parser("synthesize", help="Refine an existing note with Hermes")
     synth_parser.add_argument("--path", required=True)
     synth_parser.add_argument("--prompt", help="Extra instructions for the agent")
@@ -341,7 +345,7 @@ def main():
         from hermes_clipper.server import start_server
         start_server(host=args.host, port=args.port)
     elif args.command == "agent-clip":
-        print(json.dumps(agent_clip(args.url, args.folder, args.prompt), indent=2))
+        print(json.dumps(agent_clip(args.url, args.folder, args.prompt, args.mode), indent=2))
     elif args.command == "synthesize":
         print(json.dumps(synthesize_clip(args.path, args.prompt), indent=2))
     elif args.command == "clip":

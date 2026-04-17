@@ -26,9 +26,9 @@ hermes-clip --url "URL" --title "TITLE" --content "MARKDOWN" --folder "SUBFOLDER
 2. **Search Vault:**
    - Check `VAULT_STRUCTURE.md` index first.
    - Search notes (`grep -rl "source: [URL]"`).
-   - If exists → stop. Report existing path.
-   - New topic → `mode="unique"`.
-   - Update → `mode="merge"`.
+   - If exists AND mode is `unique` → stop. Report path.
+   - If exists AND mode is `merge` → Proceed to extract and append.
+   - New topic → Set folder, use `mode="unique"`.
 
 3. **Categorize:**
    - Logical folder tree (e.g. `Reference/Coding/React`).

@@ -49,6 +49,7 @@ class AgentClipRequest(BaseModel):
     url: str
     folder: Optional[str] = "Clippings"
     prompt: Optional[str] = None
+    mode: Optional[str] = "unique"
 
 class SynthesizeRequest(BaseModel):
     path: str
@@ -91,7 +92,7 @@ async def clip_endpoint(request: ClipRequest):
 async def agent_clip_endpoint(request: AgentClipRequest, background_tasks: BackgroundTasks):
     task_id = str(uuid.uuid4())
     tasks[task_id] = {"status": "queued", "type": "agent_clip", "url": request.url}
-    background_tasks.add_task(run_background_agent, task_id, run_agent_clip, url=request.url, folder=request.folder, extra_prompt=request.prompt)
+    background_tasks.add_task(run_background_agent, task_id, run_agent_clip, url=request.url, folder=request.folder, extra_prompt=request.prompt, mode=request.mode)
     return {"status": "accepted", "task_id": task_id}
 
 @app.post("/agent/synthesize", dependencies=[Depends(verify_api_key)])
