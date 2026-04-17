@@ -63,6 +63,10 @@ Hermes Clipper is composed of five modular components:
    - Open Chrome/Firefox Extensions page.
    - Enable "Developer Mode".
    - "Load unpacked" and select the `extension/` folder in this repo.
+   - **Configuration:** Open the extension popup, right-click and select "Inspect", then run this in the console to save your API Key:
+     ```javascript
+     localStorage.setItem('hermes_api_key', 'YOUR_API_KEY_HERE');
+     ```
 
 4. **Install Obsidian Plugin:**
    - Copy `obsidian-plugin/` contents to `<vault>/.obsidian/plugins/hermes-clipper/`.
