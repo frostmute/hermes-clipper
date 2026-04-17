@@ -40,6 +40,7 @@ CONFIG_FILE = CONFIG_DIR / "config.json"
 DEFAULT_TEMPLATE = """---
 title: "{{title}}"
 source: {{url}}
+banner: "{{banner}}"
 clipped: {{date}}
 tags: [{{tags}}]
 status: unread
@@ -67,7 +68,6 @@ def setup_wizard():
     CONFIG_DIR.mkdir(parents=True, exist_ok=True)
     config = load_config()
     
-    # Use generic default if nothing found in config or env
     default_vault = os.path.expanduser("~/Documents/ObsidianVault")
     current_vault = config.get("vault_path") or os.environ.get("OBSIDIAN_VAULT_PATH", default_vault)
     
@@ -81,7 +81,6 @@ def setup_wizard():
     
     config["vault_path"] = vault_path
     
-    # Sync to Hermes environment
     hermes_env = Path.home() / ".hermes" / ".env"
     if hermes_env.exists():
         with open(hermes_env, "a") as f:
@@ -111,10 +110,17 @@ def extract_content(url):
         response.raise_for_status()
         soup = BeautifulSoup(response.text, "html.parser")
         title = soup.title.string if soup.title else "Untitled"
+        
+        # Extract Banner (OG Image)
+        banner = ""
+        og_image = soup.find("meta", property="og:image")
+        if og_image:
+            banner = og_image.get("content", "")
+
         for script in soup(["script", "style"]):
             script.extract()
         content = soup.get_text(separator="\n", strip=True)
-        return title, content
+        return title, content, banner
     except Exception as e:
         print_error(f"Extraction failed: {e}")
         sys.exit(1)
@@ -123,7 +129,7 @@ def sanitize_filename(title):
     clean = re.sub(r'[\\/*?:"<>|]', "", title).strip()
     return clean[:150]
 
-def clip(url, title, content, folder="Clippings", tags=None, metadata=None, mode="unique", caveman=False):
+def clip(url, title, content, folder="Clippings", tags=None, metadata=None, mode="unique", caveman=False, banner=""):
     config = load_config()
     vault = config.get("vault_path") or os.environ.get("OBSIDIAN_VAULT_PATH")
     
@@ -132,7 +138,6 @@ def clip(url, title, content, folder="Clippings", tags=None, metadata=None, mode
         sys.exit(1)
         
     if caveman:
-        # Simple local compression logic
         content = re.sub(r'\b(the|a|an|and|is|are|was|were|to|of|for|in|on|at|by|with)\b', '', content, flags=re.IGNORECASE)
         content = re.sub(r'\s+', ' ', content).strip()
 
@@ -164,6 +169,7 @@ def clip(url, title, content, folder="Clippings", tags=None, metadata=None, mode
 
     rendered = template.replace("{{title}}", title)\
                        .replace("{{url}}", url)\
+                       .replace("{{banner}}", banner)\
                        .replace("{{content}}", content)\
                        .replace("{{date}}", str(datetime.date.today()))\
                        .replace("{{tags}}", tag_str)
@@ -256,14 +262,14 @@ def main():
     elif args.command == "synthesize":
         print(json.dumps(synthesize_clip(args.path, args.prompt), indent=2))
     elif args.command == "clip":
-        title, content = args.title, args.content
+        title, content, banner = args.title, args.content, ""
         if args.direct:
-            title_ext, content_ext = extract_content(args.url)
-            title, content = title or title_ext, content or content_ext
+            title_ext, content_ext, banner_ext = extract_content(args.url)
+            title, content, banner = title or title_ext, content or content_ext, banner_ext
         if not title or not content:
             print_error("Title and Content required.")
             sys.exit(1)
-        clip(args.url, title, content, args.folder, args.tags, args.metadata, args.mode, args.caveman)
+        clip(args.url, title, content, args.folder, args.tags, args.metadata, args.mode, args.caveman, banner)
     else:
         parser.print_help()
 

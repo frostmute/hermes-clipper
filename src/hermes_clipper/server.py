@@ -14,7 +14,6 @@ tasks: Dict[str, dict] = {}
 app = FastAPI(title="Hermes Clipper Bridge")
 
 # Security: Restrict CORS to known origins
-# Chrome extension ID is usually unique but we allow wide local for Obsidian
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -31,7 +30,6 @@ async def verify_api_key(x_api_key: str = Header(...)):
     config = load_config()
     expected_key = config.get("api_key")
     if not expected_key:
-        # Fallback if setup hasn't run yet, but security first
         raise HTTPException(status_code=500, detail="Bridge not configured. Run 'hermes-clip setup'.")
     if x_api_key != expected_key:
         raise HTTPException(status_code=403, detail="Invalid API Key. Hermes is not impressed.")
@@ -45,6 +43,7 @@ class ClipRequest(BaseModel):
     tags: Optional[List[str]] = []
     mode: Optional[str] = "unique"
     metadata: Optional[dict] = {}
+    banner: Optional[str] = ""
 
 class AgentClipRequest(BaseModel):
     url: str
@@ -84,7 +83,7 @@ async def clip_endpoint(request: ClipRequest):
     try:
         tag_str = ",".join(request.tags) if request.tags else ""
         meta_json = json.dumps(request.metadata) if request.metadata else None
-        return run_clip(request.url, request.title, request.content, request.folder, tag_str, meta_json, request.mode)
+        return run_clip(request.url, request.title, request.content, request.folder, tag_str, meta_json, request.mode, banner=request.banner)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
