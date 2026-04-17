@@ -1,4 +1,4 @@
-import { Plugin, Notice, TFile } from 'obsidian';
+import { Plugin, Notice, TFile, WorkspaceLeaf } from 'obsidian';
 
 interface ClipperSettings {
 	bridgeUrl: string;
@@ -18,8 +18,7 @@ export default class HermesClipperPlugin extends Plugin {
 		this.statusBarItemEl = this.addStatusBarItem();
 		this.statusBarItemEl.setText('Hermes: Idle');
 
-		// Add Ribbon Icon (Toolbar Button)
-		this.addRibbonIcon('brain', 'Hermes: Synthesize & Organize', (evt: MouseEvent) => {
+		this.addRibbonIcon('brain', 'Hermes: Synthesize & Organize', () => {
 			this.synthesizeNote();
 		});
 
@@ -33,11 +32,11 @@ export default class HermesClipperPlugin extends Plugin {
 	async synthesizeNote() {
 		const activeFile = this.app.workspace.getActiveFile();
 		if (!(activeFile instanceof TFile)) {
-			new Notice('No active file to synthesize.');
+			new Notice('Hermes: No file selected. Try using your eyes.');
 			return;
 		}
 
-		new Notice(`Dispatching Hermes to synthesize: ${activeFile.name}...`);
+		new Notice(`Hermes: Dispatching for ${activeFile.name}...`);
 		this.statusBarItemEl.setText('Hermes: 🧠 Synthesizing...');
 
 		try {
@@ -46,21 +45,63 @@ export default class HermesClipperPlugin extends Plugin {
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
 					path: activeFile.path,
-					prompt: "Synthesize and refine this note."
+					prompt: "Synthesize and organize."
 				})
 			});
 
 			const data = await response.json();
-			if (data.status === 'success') {
-				new Notice('Synthesis complete!');
+			if (data.status === 'accepted') {
+				this.pollTask(data.task_id);
 			} else {
-				new Notice('Hermes failed: ' + data.message);
+				new Notice('Hermes rejected you: ' + data.message);
+				this.statusBarItemEl.setText('Hermes: Idle');
 			}
 		} catch (err) {
 			new Notice('Failed to connect to Hermes Bridge.');
-			console.error(err);
-		} finally {
 			this.statusBarItemEl.setText('Hermes: Idle');
+		}
+	}
+
+	async pollTask(taskId: string) {
+		const check = async () => {
+			try {
+				const response = await fetch(`${this.settings.bridgeUrl}/tasks/${taskId}`);
+				const task = await response.json();
+
+				if (task.status === 'completed') {
+					this.statusBarItemEl.setText('Hermes: Idle');
+					new Notice('Hermes: Synthesis complete. Note moved.');
+					
+					// If Hermes moved the file, we should try to find it
+					if (task.result && task.result.path) {
+						this.openNewPath(task.result.path);
+					}
+					return true;
+				} else if (task.status === 'failed') {
+					this.statusBarItemEl.setText('Hermes: Failed');
+					new Notice('Hermes: I failed. It happens to the best of us.');
+					return true;
+				}
+				return false;
+			} catch (err) {
+				return true; // Stop on error
+			}
+		};
+
+		const interval = setInterval(async () => {
+			if (await check()) clearInterval(interval);
+		}, 3000);
+	}
+
+	async openNewPath(absPath: string) {
+		// Convert absolute path to vault relative path
+		// Bridge returns absolute path, Obsidian needs vault relative
+		const vaultPath = (this.app.vault.adapter as any).getBasePath();
+		let relPath = absPath.replace(vaultPath, '').replace(/^\//, '');
+		
+		const file = this.app.vault.getAbstractFileByPath(relPath);
+		if (file instanceof TFile) {
+			this.app.workspace.getLeaf(true).openFile(file);
 		}
 	}
 

@@ -3,12 +3,14 @@ document.getElementById('agentBtn').addEventListener('click', () => sendToBridge
 
 async function sendToBridge(endpoint) {
   const status = document.getElementById('status');
-  status.textContent = "Working...";
+  const btn = endpoint === '/clip' ? document.getElementById('clipBtn') : document.getElementById('agentBtn');
+  
+  status.textContent = "Hermes is busy...";
+  btn.classList.add('pulse');
 
   try {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
     
-    // Get content from content script
     const results = await chrome.scripting.executeScript({
       target: { tabId: tab.id },
       func: () => ({
@@ -29,7 +31,7 @@ async function sendToBridge(endpoint) {
         })
       : JSON.stringify({
           url: pageData.url,
-          prompt: "Research and clip this page."
+          prompt: "Research and clip."
         });
 
     const response = await fetch(`http://127.0.0.1:8088${endpoint}`, {
@@ -39,13 +41,40 @@ async function sendToBridge(endpoint) {
     });
 
     const data = await response.json();
-    if (data.status === 'success') {
-      status.textContent = "Done! Check Obsidian.";
+    
+    if (data.status === 'accepted') {
+      pollTask(data.task_id, btn);
+    } else if (data.status === 'success') {
+      status.textContent = "Done. Don't expect a medal.";
+      btn.classList.remove('pulse');
     } else {
       status.textContent = "Error: " + data.message;
+      btn.classList.remove('pulse');
     }
   } catch (err) {
-    status.textContent = "Failed to connect to bridge.";
-    console.error(err);
+    status.textContent = "Bridge missing. Wake it up.";
+    btn.classList.remove('pulse');
   }
+}
+
+async function pollTask(taskId, btn) {
+  const status = document.getElementById('status');
+  const interval = setInterval(async () => {
+    try {
+      const response = await fetch(`http://127.0.0.1:8088/tasks/${taskId}`);
+      const task = await response.json();
+
+      if (task.status === 'completed') {
+        status.textContent = "Finished. You're welcome.";
+        btn.classList.remove('pulse');
+        clearInterval(interval);
+      } else if (task.status === 'failed') {
+        status.textContent = "I failed. Blame the internet.";
+        btn.classList.remove('pulse');
+        clearInterval(interval);
+      }
+    } catch (err) {
+      clearInterval(interval);
+    }
+  }, 3000);
 }

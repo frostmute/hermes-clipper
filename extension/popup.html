@@ -4,37 +4,63 @@
   <style>
     body {
       width: 200px;
-      padding: 10px;
-      font-family: sans-serif;
-      background: #1e1e1e;
+      padding: 12px;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #121212;
       color: #eee;
+      border: 1px solid #d4af37;
+    }
+    h3 {
+      color: #d4af37;
+      margin-top: 0;
+      font-size: 16px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
     }
     .btn {
       display: block;
       width: 100%;
       padding: 10px;
       margin-bottom: 8px;
-      border: none;
+      border: 1px solid transparent;
       border-radius: 4px;
       cursor: pointer;
       font-weight: bold;
-      text-align: center;
+      transition: all 0.2s;
     }
-    .btn-primary { background: #4a90e2; color: white; }
-    .btn-agent { background: #7c4dff; color: white; }
-    .btn:hover { opacity: 0.9; }
+    .btn-primary { 
+      background: #d4af37; 
+      color: #121212; 
+    }
+    .btn-agent { 
+      background: transparent; 
+      color: #d4af37; 
+      border-color: #d4af37;
+    }
+    .btn:hover { 
+      filter: brightness(1.2);
+      box-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
+    }
     #status {
-      font-size: 12px;
-      margin-top: 10px;
-      color: #aaa;
+      font-size: 11px;
+      margin-top: 12px;
+      color: #888;
+      font-style: italic;
+    }
+    .pulse {
+      animation: pulse-animation 2s infinite;
+    }
+    @keyframes pulse-animation {
+      0% { box-shadow: 0 0 0 0px rgba(212, 175, 55, 0.4); }
+      100% { box-shadow: 0 0 0 10px rgba(212, 175, 55, 0); }
     }
   </style>
 </head>
 <body>
-  <h3>Hermes Clipper</h3>
+  <h3>⚡ Hermes</h3>
   <button id="clipBtn" class="btn btn-primary">Quick Clip</button>
   <button id="agentBtn" class="btn btn-agent">Agent Research</button>
-  <div id="status">Ready.</div>
+  <div id="status">Ready to serve.</div>
   <script src="popup.js"></script>
 </body>
 </html>

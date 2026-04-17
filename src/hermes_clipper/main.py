@@ -8,6 +8,21 @@ import json
 import subprocess
 from pathlib import Path
 
+# --- Branding ---
+HERMES_GOLD = "\033[33m"
+RESET = "\033[0m"
+BOLD = "\033[1m"
+
+HERMES_LOGO = f"""{HERMES_GOLD}{BOLD}
+  ⚡ HERMES CLIPPER v0.1.0
+  "Too lazy to file it yourself? I got you."
+{RESET}"""
+
+def print_header(text):
+    print(f"{HERMES_GOLD}{BOLD}>>> {text}{RESET}")
+
+# --- Logic ---
+
 # Try to import extraction libraries for direct mode
 try:
     from bs4 import BeautifulSoup
