@@ -4,7 +4,8 @@ This file contains foundational mandates, project-specific instructions, and con
 
 ## 🎯 Project Overview
 - **Goal:** Raindrop.io Integration for Obsidian ("Make It Rain"). Seamlessly import bookmarks, highlights, and notes from Raindrop.io into Obsidian vaults.
-- **Status:** Active Development (v1.8.0).
+- **Status:** Active Development (v1.8.x).
+- **Core Optimization:** **Token Sovereignty 2.0** implemented. Features local duplicate detection (Grep Sieve), vault structural indexing, and Agent-level head extraction for maximum token efficiency.
 
 ## 🛠 Tech Stack
 - **Language:** TypeScript (v5.3.3)

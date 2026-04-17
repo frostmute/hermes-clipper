@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+dist/
+build/
+.venv/
+env/
+venv/
+ENV/
+
+# Node / Obsidian
+node_modules/
+obsidian-plugin/main.js
+.obsidian/
+
+# Logs & Temp
+*.log
+.DS_Store
+.env
+.hermes/
+ffmpeg.log
+demo_server.log
+
+# Media (Demos should be hosted externally or in a dedicated branch)
+*.mp4
+*.webm
+
+# Local Config
+.config/
+config.json
+
+# Development
+.vscode/
+.idea/
+*.swp
+*.swo

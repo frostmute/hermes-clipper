@@ -1,30 +1,30 @@
 # Smart Synthesis: The Librarian in the Machine
 
 ### Genesis Part 3
-*The prompt engineering behind autonomous note organization and vault-wide cross-linking.*
+*How an automated librarian helps us maintain a thriving vault.*
 
 ---
 
-Why is it so hard to organize a vault? Because categorization is **High-Entropy Work**. Every new note requires you to hold your entire vault structure in your head to decide where it fits.
+Why is it so hard to maintain a clean vault? Because organization is **High-Entropy Work**. Every new note requires us to remember our entire vault structure just to decide where it belongs.
 
-## The Librarian's Logic
-In **Hermes Clipper**, the `synthesize` command is where the magic happens. We've programmed the Hermes Agent to act as an automated librarian. 
+## A Helping Hand
+In **Hermes Clipper**, the `synthesize` command is designed to act as an automated librarian for your digital garden. We wanted a partner that could take the "First Pass" at organizing a note so we could stay in our creative flow.
 
-Instead of a simple "move file" command, the Agent follows a recursive logic:
-1.  **Read:** Understand the core concepts of the new clip.
-2.  **Recall:** Search the existing Obsidian vault for related topics.
-3.  **Cross-Link:** Automatically add `[[Wikilinks]]` to the new note that point to existing project files.
-4.  **Migrate:** Move the file from the "holding pen" (`Clippings/`) to a permanent folder (`Research/`, `Reference/`, etc.) based on the vault's established taxonomy.
+Instead of a simple "move file" command, the Agent helps with the heavy lifting:
+1.  **Contextual Reading:** It understands the core concepts of your new clip.
+2.  **Recall:** It looks through your existing Obsidian vault for related topics.
+3.  **Cross-Linking:** It automatically suggests `[[Wikilinks]]` that connect new ideas to your current projects.
+4.  **Assisted Filing:** It moves the note from your "Inbox" (`Clippings/`) to a permanent home based on how *you* already organize your vault.
 
-## Prompting for Persistence
-The "Secret Sauce" here is the instruction set. We don't just tell Hermes to "clean it up." We tell him to make it **"Vault-Ready."**
+## Keeping it "Vault-Ready"
+The goal isn't to replace our own thinking, but to make our research **"Vault-Ready"** the moment we need it. 
 
 This includes:
-- Updating YAML frontmatter with `status: permanent`.
-- Adding a `Synthesized` tag.
-- Identifying and fixing OCR or scraping errors.
+- Updating frontmatter with helpful metadata.
+- Tagging and formatting for readability.
+- Helping identify connections we might have missed.
 
-By the time you open the note from the Obsidian Ribbon button, the work is already done. You don't "organize" your notes anymore—you just verify them.
+By the time you open the note in Obsidian, the busy-work is done. You don't have to "organize" your notes anymore—you just refine and enjoy them.
 
 ---
-*Next up: Caveman Tokens - Slashing LLM costs by 70% with linguistic compression.*
+*Next up: Caveman Tokens - How we respect your token budget with smarter linguistics.*

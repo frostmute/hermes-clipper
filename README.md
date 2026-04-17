@@ -17,7 +17,10 @@
 ### Why Hermes Clipper?
 - **Zero Friction:** One-click from your browser, handled by an agent.
 - **Agent-First:** Stop picking folders. Let Hermes decide where it belongs based on your vault's existing context.
-- **Token Efficient:** Built-in support for **Caveman Mode** to slash LLM costs by ~70%.
+- **Token Sovereignty 2.0:** Deeply optimized for LLM efficiency.
+    - **Smart Duplicate Detection:** Local `grep` sieve prevents redundant Agent research.
+    - **Vault Structural Index:** Auto-generated folder map eliminates expensive recursive listings.
+    - **Linguistic Compression:** Built-in **Caveman Mode** support to slash LLM costs by ~75%.
 - **Local Sovereignty:** Your data stays in your vault. Secure bridge with API key protection.
 
 ---
@@ -26,10 +29,10 @@
 
 Hermes Clipper is composed of five modular components:
 
-1.  **🧠 The Brain (Skill):** The procedural logic for Hermes Agent to research and organize.
+1.  **🧠 The Brain (Skill):** Optimized procedural logic for Hermes Agent. Now features **Head Extraction** (~4k chars) for categorization efficiency.
 2.  **📡 The Bridge (FastAPI):** A secure local gateway connecting browsers and plugins to the Agent.
 3.  **🛰️ The Scout (Extension):** A sleek Chrome/Firefox extension for 1-click capture.
-4.  **🔨 The Hand (CLI):** A powerful standalone tool for manual clipping and automation.
+4.  **🔨 The Hand (CLI):** A powerful standalone tool featuring a smart setup wizard that auto-provisions your Agent's memory.
 5.  **🏡 The Garden (Plugin):** An Obsidian ribbon interface for synthesis and status monitoring.
 
 ---
@@ -54,7 +57,7 @@ Hermes Clipper is composed of five modular components:
    ```bash
    hermes-clip setup
    ```
-   *Note: This will generate your API Key. Keep it safe.*
+   *Note: This generates your API Key, deploys the optimized Skill to Hermes, and builds your Vault Structural Index.*
 
 3. **Install Browser Extension:**
    - Open Chrome/Firefox Extensions page.

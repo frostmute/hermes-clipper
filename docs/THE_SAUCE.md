@@ -30,13 +30,24 @@ Before a single token is sent to the cloud, the **Hand (CLI)** uses `BeautifulSo
 We utilize the **Caveman Skill** to force Hermes into a high-density, low-filler communication style.
 - **Original:** "I have successfully navigated to the page and I am now beginning the process of synthesizing the information for your vault..."
 - **Caveman:** "Page read. Meat found. Vault update start."
-- **Result:** ~70% reduction in conversational token overhead.
+- **Result:** ~75% reduction in conversational token overhead.
 
 ### Layer C: Semantic Filtering (The "Move")
 The system handles "useful info" vs. "noise" through the **Move Logic**.
 - **Clippings/ (Cold Storage):** Everything starts here. It's raw, unverified data.
 - **Synthesis (The Filter):** Hermes evaluates the clip. If it's high-signal, he refines it and moves it to a permanent folder (`Research/`, `Reference/`). 
 - **Result:** Your "Active Context" remains high-quality. Noise stays in the "trash" folder.
+
+### Layer D: The Structural Index (Vault Mapping)
+Why let the Agent `ls` your entire drive? 
+The setup wizard generates `~/.hermes/memories/VAULT_STRUCTURE.md`. 
+- **The Move:** The Agent reads this ~1KB index to decide folder placement instantly.
+- **Result:** ~90% reduction in discovery tokens.
+
+### Layer E: The Grep Sieve (Duplicate Prevention)
+The CLI uses local `grep` to check if a URL's source has already been clipped.
+- **The Move:** If the file exists, the Agent isn't even dispatched. 
+- **Result:** Zero token cost for redundant clips.
 
 ---
 

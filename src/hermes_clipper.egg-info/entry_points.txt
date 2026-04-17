@@ -1,2 +1,0 @@
-[console_scripts]
-hermes-clip = hermes_clipper.main:main

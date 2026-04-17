@@ -1,0 +1,13 @@
+{
+  "skills": [
+    {
+      "name": "clipping",
+      "description": "Intelligent web clipping and organization for Obsidian vaults.",
+      "version": "0.1.0",
+      "url": "https://github.com/frostmute/hermes-clipper/tree/master/hermes_skills/clipping",
+      "author": "frostmute",
+      "license": "MIT",
+      "tags": ["obsidian", "clipping", "knowledge-management"]
+    }
+  ]
+}

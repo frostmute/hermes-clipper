@@ -1,5 +1,17 @@
 {
-  "dependencies": {
-    "esbuild": "^0.28.0"
+  "name": "hermes-clipper-plugin",
+  "version": "0.1.0",
+  "description": "Obsidian plugin for Hermes Clipper",
+  "main": "main.js",
+  "scripts": {
+    "dev": "esbuild obsidian-plugin/main.ts --bundle --external:obsidian --format=cjs --outfile=obsidian-plugin/main.js",
+    "build": "esbuild obsidian-plugin/main.ts --bundle --external:obsidian --format=cjs --minify --outfile=obsidian-plugin/main.js"
+  },
+  "author": "frostmute",
+  "license": "MIT",
+  "devDependencies": {
+    "esbuild": "^0.28.0",
+    "obsidian": "^1.7.2",
+    "typescript": "^5.3.3"
   }
 }

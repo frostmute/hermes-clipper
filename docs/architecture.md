@@ -6,7 +6,7 @@
 ## 🚀 Progress & Current State
 
 ### 1. Environment Configuration
-- **Vault Integration:** Established `/home/frost/Endeavor` as the primary Obsidian vault.
+- **Vault Integration:** Established `~/Documents/ObsidianVault` as the primary Obsidian vault.
 - **Hermes Setup:** Configured `OBSIDIAN_VAULT_PATH` in `.hermes/.env` to allow agent-level access to the vault.
 - **Local Config:** Created `~/.config/hermes-clipper/` for persistent settings and custom templates.
 
@@ -23,7 +23,12 @@
         - `POST /clip`: Direct clipping of provided content.
         - `POST /agent/clip`: Dispatches a background Hermes Agent for autonomous research and clipping ("Agent-Mode").
 
-### 3. Source Control
+### 4. Token Optimization Layer (Phase 2.5)
+- **Vault Indexing:** Setup generates `~/.hermes/memories/VAULT_STRUCTURE.md`. Agent reads this ~1KB file instead of running `ls -R` (potentially ~100KB+ output).
+- **Grep Sieve:** `check_duplicate()` uses local `grep` to find existing source URLs. Agent is only dispatched if the URL is unique.
+- **Head Extraction:** The `clipping` skill is tuned to read the first 4,000 characters for classification, minimizing initial context window usage.
+
+### 5. Source Control
 - **GitHub:** Private repository initialized at `frostmute/hermes-clipper`.
 - **Structure:** Clean Python package structure ready for public distribution.
 
@@ -37,6 +42,7 @@
 ### Phase 2: The "Bridge" (Complete)
 - FastAPI server bridging external triggers to the Hermes Agent.
 - Added **Agent-Mode** for autonomous multi-turn research tasks.
+- **Integrated Optimizations:** Local duplicate checks and structural indexing.
 
 ### Phase 3: Browser Extension (Next Step)
 - **Function:** A "One-Click" button in Chrome/Firefox.

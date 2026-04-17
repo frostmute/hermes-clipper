@@ -62,6 +62,35 @@ def save_config(config):
     with open(CONFIG_FILE, "w") as f:
         json.dump(config, f, indent=4)
 
+def setup_vault_index(vault_path):
+    index_path = Path.home() / ".hermes" / "memories" / "VAULT_STRUCTURE.md"
+    index_path.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        cmd = f'find {vault_path} -maxdepth 4 -type d | sed "s|^{vault_path}/||" | grep -v "^\\." | sort'
+        result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+        if result.returncode == 0:
+            with open(index_path, "w") as f:
+                f.write("# VAULT STRUCTURE (AUTO-GENERATED)\n")
+                f.write(result.stdout)
+            print_header("Vault structural index generated (~/.hermes/memories/VAULT_STRUCTURE.md).")
+    except: pass
+
+def deploy_skill():
+    hermes_skill_dir = Path.home() / ".hermes" / "skills" / "note-taking" / "clipping"
+    repo_skill = Path(__file__).parent.parent.parent / "hermes_skills" / "clipping" / "SKILL.md"
+    
+    # Try alternate location if not found relative to __file__
+    if not repo_skill.exists():
+        repo_skill = Path.home() / "hermes-clipper" / "hermes_skills" / "clipping" / "SKILL.md"
+
+    if repo_skill.exists():
+        hermes_skill_dir.mkdir(parents=True, exist_ok=True)
+        import shutil
+        shutil.copy(repo_skill, hermes_skill_dir / "SKILL.md")
+        print_header(f"Clipper Skill deployed to {hermes_skill_dir}.")
+    else:
+        print_error(f"Skill file not found at {repo_skill}. Deployment skipped.")
+
 def setup_wizard():
     print(HERMES_LOGO)
     print("Welcome to the Hermes Clipper Setup Wizard!")
@@ -83,9 +112,13 @@ def setup_wizard():
     
     hermes_env = Path.home() / ".hermes" / ".env"
     if hermes_env.exists():
-        with open(hermes_env, "a") as f:
-            f.write(f'\nOBSIDIAN_VAULT_PATH="{vault_path}"\n')
-        print_header("Synced vault path to Hermes Agent.")
+        # Avoid duplicate entries
+        with open(hermes_env, "r") as f:
+            content = f.read()
+        if f'OBSIDIAN_VAULT_PATH="{vault_path}"' not in content:
+            with open(hermes_env, "a") as f:
+                f.write(f'\nOBSIDIAN_VAULT_PATH="{vault_path}"\n')
+            print_header("Synced vault path to Hermes Agent.")
     
     if "api_key" not in config:
         config["api_key"] = secrets.token_hex(16)
@@ -99,7 +132,15 @@ def setup_wizard():
     
     config["template_path"] = str(template_path)
     save_config(config)
+
+    # Token Efficient Deployments
+    setup_vault_index(vault_path)
+    deploy_skill()
+
     print_header("Setup Complete!")
+    print(f"\n💡 {HERMES_GOLD}Token Optimization Tip:{RESET}")
+    print("  To maximize efficiency, keep 'Caveman Mode' active in Hermes.")
+    print("  Run: 'hermes chat -q \"use caveman mode forever\"'")
 
 def extract_content(url):
     if not HAS_EXTRACTION:
@@ -129,6 +170,20 @@ def sanitize_filename(title):
     clean = re.sub(r'[\\/*?:"<>|]', "", title).strip()
     return clean[:150]
 
+def check_duplicate(url, vault):
+    if not url or not vault: return None
+    try:
+        # Search for source URL in frontmatter (supports source: URL or source: "URL")
+        patterns = [f"source: {url}", f'source: "{url}"']
+        for pattern in patterns:
+            cmd = ["grep", "-rl", pattern, vault]
+            result = subprocess.run(cmd, capture_output=True, text=True)
+            if result.returncode == 0 and result.stdout.strip():
+                # Return the first match found
+                return result.stdout.splitlines()[0]
+    except: pass
+    return None
+
 def clip(url, title, content, folder="Clippings", tags=None, metadata=None, mode="unique", caveman=False, banner=""):
     config = load_config()
     vault = config.get("vault_path") or os.environ.get("OBSIDIAN_VAULT_PATH")
@@ -136,6 +191,19 @@ def clip(url, title, content, folder="Clippings", tags=None, metadata=None, mode
     if not vault:
         print_error("Vault path not set. Run 'hermes-clip setup'.")
         sys.exit(1)
+
+    if mode == "unique":
+        dup = check_duplicate(url, vault)
+        if dup:
+            vault_name = os.path.basename(vault)
+            relative_path = os.path.relpath(dup, vault)
+            res = {
+                "status": "exists",
+                "path": dup,
+                "uri": f"obsidian://open?vault={vault_name}&file={relative_path}"
+            }
+            print(json.dumps(res))
+            return res
         
     if caveman:
         content = re.sub(r'\b(the|a|an|and|is|are|was|were|to|of|for|in|on|at|by|with)\b', '', content, flags=re.IGNORECASE)
@@ -199,9 +267,21 @@ def clip(url, title, content, folder="Clippings", tags=None, metadata=None, mode
     return result
 
 def agent_clip(url, folder="Clippings", extra_prompt=None):
-    prompt = f"Navigate to {url}, extract its content, and use the 'hermes-clip' tool to save it to my Obsidian vault. Organize it under the '{folder}' folder."
-    if extra_prompt: prompt += f" Additional instructions: {extra_prompt}"
-    print_header(f"Dispatching Agent to research: {url}")
+    config = load_config()
+    vault = config.get("vault_path") or os.environ.get("OBSIDIAN_VAULT_PATH")
+    
+    if dup := check_duplicate(url, vault):
+        vault_name = os.path.basename(vault)
+        relative_path = os.path.relpath(dup, vault)
+        return {
+            "status": "exists", 
+            "path": dup, 
+            "uri": f"obsidian://open?vault={vault_name}&file={relative_path}"
+        }
+
+    prompt = f"Clip {url} to Obsidian/{folder}. Note: read head (~4k chars) for categorization, then save full content."
+    if extra_prompt: prompt += f" Additional: {extra_prompt}"
+    print_header(f"Dispatching Agent: {url}")
     cmd = ["hermes", "chat", "-q", prompt, "-t", "browser,terminal", "-s", "clipping", "--yolo"]
     try:
         result = subprocess.run(cmd, capture_output=True, text=True, check=True)
@@ -211,14 +291,9 @@ def agent_clip(url, folder="Clippings", extra_prompt=None):
 
 def synthesize_clip(note_path, extra_prompt=None):
     abs_path = os.path.abspath(note_path)
-    prompt = f"""Read the note at {abs_path}. 
-1. Research topic if needed.
-2. Refine content & cross-link within vault.
-3. Move file to appropriate permanent folder in vault. 
-4. Update with 'status: permanent' and 'Synthesized' tag.
-"""
-    if extra_prompt: prompt += f" Instructions: {extra_prompt}"
-    print_header(f"Dispatching Agent to synthesize: {note_path}")
+    prompt = f"Synthesize {abs_path}: refine, cross-link, move to perm folder, status: permanent, tag: Synthesized."
+    if extra_prompt: prompt += f" Note: {extra_prompt}"
+    print_header(f"Dispatching Agent: {note_path}")
     cmd = ["hermes", "chat", "-q", prompt, "-t", "browser,terminal", "-s", "clipping", "--yolo"]
     try:
         result = subprocess.run(cmd, capture_output=True, text=True, check=True)

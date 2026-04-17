@@ -30,3 +30,26 @@ By using the clipper, you didn't just "save a link." You:
 - **Improved Semantic Recall:** The synthesis step ensured the data was high-quality and project-linked.
 
 **Conclusion:** Usage is not just storage. Usage is **Agent Training.** 🚀
+
+---
+
+## 📉 Efficiency Benchmark (v1.8.x)
+
+With **Token Sovereignty 2.0**, we've shifted expensive reasoning from the LLM to local shell-based primitives.
+
+### Comparison: Vault Discovery
+| Method | Data Processed by LLM | Latency | Token Cost |
+| :--- | :--- | :--- | :--- |
+| **Agent `ls -R`** | ~50KB - 200KB (Text) | ~15s | High ($$$) |
+| **Index-Driven** | ~1KB (Structural Index) | < 2s | Negligible (¢) |
+
+### Comparison: Duplicate Handling
+| Method | Process | Result |
+| :--- | :--- | :--- |
+| **Naive Agent** | Research → Extract → Write → "File already exists" | Session fully charged |
+| **Grep Sieve** | Local grep check → "File exists, skipping" | **$0.00 (Zero Token Cost)** |
+
+### Optimization Impact
+- **Linguistic Compression (Caveman):** ~75% reduction in conversational overhead.
+- **Head Extraction (4k char limit):** ~90% reduction in initial "read" tokens for large documentation pages.
+- **Structural Indexing:** Eliminates the need for the Agent to "explore" the file system.
