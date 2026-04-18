@@ -30,6 +30,7 @@ def print_error(text):
 try:
     from bs4 import BeautifulSoup
     import requests
+    from readability import Document
     HAS_EXTRACTION = True
 except ImportError:
     HAS_EXTRACTION = False
@@ -152,23 +153,26 @@ def setup_wizard():
 
 def extract_content(url):
     if not HAS_EXTRACTION:
-        print_error("'requests' and 'beautifulsoup4' required for direct mode.")
+        print_error("'requests', 'beautifulsoup4', and 'readability-lxml' required for direct mode.")
         sys.exit(1)
     try:
         response = requests.get(url, timeout=15, headers={"User-Agent": "Mozilla/5.0"})
         response.raise_for_status()
+        
         soup = BeautifulSoup(response.text, "html.parser")
         title = soup.title.string if soup.title else "Untitled"
         
-        # Extract Banner (OG Image)
         banner = ""
         og_image = soup.find("meta", property="og:image")
         if og_image:
             banner = og_image.get("content", "")
 
-        for script in soup(["script", "style"]):
-            script.extract()
-        content = soup.get_text(separator="\n", strip=True)
+        doc = Document(response.text)
+        content_html = doc.summary()
+        
+        content_soup = BeautifulSoup(content_html, "html.parser")
+        content = content_soup.get_text(separator="\n", strip=True)
+        
         return title, content, banner
     except Exception as e:
         print_error(f"Extraction failed: {e}")
