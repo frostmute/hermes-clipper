@@ -45,10 +45,31 @@ CONFIG_DIR.mkdir(parents=True, exist_ok=True)
 # print(f"DEBUG: PID_FILE is {PID_FILE}")
 
 def is_running(pid):
+    """Check if a process with given PID is running and matches our name."""
     try:
         os.kill(pid, 0)
     except OSError:
         return False
+    
+    # Verify process name to prevent PID reuse issues
+    try:
+        # Try /proc on Linux first (fastest)
+        proc_cmdline = Path(f"/proc/{pid}/cmdline")
+        if proc_cmdline.exists():
+            with open(proc_cmdline, "rb") as f:
+                content = f.read().decode().replace('\x00', ' ').lower()
+                return "python" in content or "hermes" in content
+        
+        # Fallback to 'ps' command
+        cmd = ["ps", "-p", str(pid), "-o", "args="]
+        result = subprocess.run(cmd, capture_output=True, text=True, check=False)
+        if result.returncode == 0:
+            args = result.stdout.lower()
+            return "python" in args or "hermes" in args
+    except Exception:
+        # If we can't verify name, we trust os.kill(pid, 0)
+        pass
+        
     return True
 
 def write_pid(pid):
@@ -73,12 +94,20 @@ def stop_bridge():
 
 def get_bridge_status():
     if PID_FILE.exists():
-        with open(PID_FILE, "r") as f:
-            try:
-                pid = int(f.read().strip())
+        try:
+            with open(PID_FILE, "r") as f:
+                content = f.read().strip()
+                if not content:
+                    PID_FILE.unlink(missing_ok=True)
+                    return "offline"
+                pid = int(content)
                 if is_running(pid):
                     return f"online (PID: {pid})"
-            except: pass
+                else:
+                    # Stale PID file
+                    PID_FILE.unlink(missing_ok=True)
+        except (ValueError, OSError):
+            PID_FILE.unlink(missing_ok=True)
     return "offline"
 
 def start_daemon(host, port):
@@ -159,9 +188,11 @@ def deploy_skill():
     hermes_skill_dir = Path.home() / ".hermes" / "skills" / "note-taking" / "clipping"
     
     # Discovery chain: check common repo/install locations
+    # repo_root is 3 levels up from src/hermes_clipper/main.py
+    repo_root = Path(__file__).parent.parent.parent.absolute()
+    
     candidates = [
-        Path(__file__).parent.parent.parent / "skills" / "clipping" / "SKILL.md",
-        Path.home() / "hermes-clipper" / "skills" / "clipping" / "SKILL.md",
+        repo_root / "skills" / "clipping" / "SKILL.md",
         Path("/usr/local/share/hermes-clipper/skills/clipping/SKILL.md"),
     ]
     
