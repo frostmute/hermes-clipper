@@ -7,6 +7,7 @@ import re
 import json
 import subprocess
 import secrets
+import platform
 from pathlib import Path
 
 # --- Branding ---
@@ -229,9 +230,94 @@ def setup_wizard():
     print("  To maximize efficiency, keep 'Caveman Mode' active in Hermes.")
     print("  Run: 'hermes chat -q \"use caveman mode forever\"'")
 
-from .extractor import extract_content_to_markdown
+def setup_browser_host():
+    print_header("Setting up Browser Native Messaging Host")
+    
+    # repo_root is 3 levels up from src/hermes_clipper/main.py
+    repo_root = Path(__file__).parent.parent.parent.absolute()
+    src_path = repo_root / "src"
+    
+    wrapper_path = CONFIG_DIR / "hermes-clip-host"
+    
+    # 1. Create wrapper script
+    # This wrapper ensures PYTHONPATH is set correctly so host.py can find hermes_clipper package
+    wrapper_content = f"""#!/bin/bash
+export PYTHONPATH="{src_path}"
+exec {sys.executable} -m hermes_clipper.host "$@"
+"""
+    try:
+        with open(wrapper_path, "w") as f:
+            f.write(wrapper_content)
+        wrapper_path.chmod(0o755)
+        print(f"Created wrapper script at {wrapper_path}")
+    except Exception as e:
+        print_error(f"Failed to create wrapper script: {e}")
+        return
+    
+    # 2. Generate Manifest
+    # Note: Firefox uses allowed_extensions, Chrome uses allowed_origins
+    manifest = {
+        "name": "com.frostmute.hermes_clipper",
+        "description": "Hermes Clipper Native Messaging Host",
+        "path": str(wrapper_path),
+        "type": "stdio",
+        "allowed_origins": [
+            "chrome-extension://jkolhkofpogidpceolajclmjdclonlhp/", # Common Dev ID
+            "chrome-extension://pgafcinpgbegeedaclnmpleebjeoccla/"  # Placeholder
+        ],
+        "allowed_extensions": [
+            "hermes-clipper@frostmute.io"
+        ]
+    }
+    
+    # 3. Detect OS and set target directories
+    system = platform.system()
+    targets = []
+    
+    if system == "Linux":
+        chrome_base = Path.home() / ".config" / "google-chrome"
+        brave_base = Path.home() / ".config" / "BraveSoftware" / "Brave-Browser"
+    elif system == "Darwin": # MacOS
+        chrome_base = Path.home() / "Library" / "Application Support" / "Google" / "Chrome"
+        brave_base = Path.home() / "Library" / "Application Support" / "BraveSoftware" / "Brave-Browser"
+    else:
+        print_error(f"OS {system} not supported for auto-setup.")
+        return
+
+    # Handle Chrome
+    targets.append(chrome_base / "NativeMessagingHosts")
+    
+    # Handle Brave if folder exists
+    if brave_base.exists():
+        targets.append(brave_base / "NativeMessagingHosts")
+    
+    # Also handle Chromium on Linux if it exists
+    if system == "Linux":
+        chromium_base = Path.home() / ".config" / "chromium"
+        if chromium_base.exists():
+            targets.append(chromium_base / "NativeMessagingHosts")
+
+    manifest_filename = "com.frostmute.hermes_clipper.json"
+    
+    success_count = 0
+    for target in targets:
+        try:
+            target.mkdir(parents=True, exist_ok=True)
+            manifest_path = target / manifest_filename
+            with open(manifest_path, "w") as f:
+                json.dump(manifest, f, indent=4)
+            print(f"Installed manifest to {manifest_path}")
+            success_count += 1
+        except Exception as e:
+            print_error(f"Failed to install manifest to {target}: {e}")
+
+    if success_count > 0:
+        print_header("Browser host setup complete.")
+    else:
+        print_error("Failed to install manifest to any browser directory.")
 
 def extract_content(url):
+    from .extractor import extract_content_to_markdown
     if not HAS_EXTRACTION:
         print_error("'requests', 'beautifulsoup4', and 'readability-lxml' required for direct mode.")
         sys.exit(1)
@@ -429,6 +515,7 @@ def main():
     parser = argparse.ArgumentParser(description="Hermes Clipper for Obsidian")
     subparsers = parser.add_subparsers(dest="command")
     subparsers.add_parser("setup", help="Run the configuration wizard")
+    subparsers.add_parser("setup-browser-host", help="Setup Browser Native Messaging Host")
     
     serve_parser = subparsers.add_parser("serve", help="Start the local bridge server")
     serve_parser.add_argument("--host", default="127.0.0.1")
@@ -462,6 +549,8 @@ def main():
     args = parser.parse_args()
     if args.command == "setup":
         setup_wizard()
+    elif args.command == "setup-browser-host":
+        setup_browser_host()
     elif args.command == "serve":
         if args.daemon:
             start_daemon(args.host, args.port)
