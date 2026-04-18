@@ -229,6 +229,8 @@ def setup_wizard():
     print("  To maximize efficiency, keep 'Caveman Mode' active in Hermes.")
     print("  Run: 'hermes chat -q \"use caveman mode forever\"'")
 
+from .extractor import extract_content_to_markdown
+
 def extract_content(url):
     if not HAS_EXTRACTION:
         print_error("'requests', 'beautifulsoup4', and 'readability-lxml' required for direct mode.")
@@ -265,9 +267,8 @@ def extract_content(url):
             res["pub_date"] = json_ld.get("datePublished") or res["pub_date"]
             res["description"] = json_ld.get("description") or res["description"]
 
-        doc = Document(response.text)
-        content_html = doc.summary()
-        content = BeautifulSoup(content_html, "html.parser").get_text(separator="\n", strip=True)
+        # Use new markdown extractor
+        content = extract_content_to_markdown(response.text)
         
         return {
             "title": title,

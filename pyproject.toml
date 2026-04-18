@@ -19,6 +19,7 @@ dependencies = [
     "fastapi",
     "uvicorn",
     "pydantic",
+    "markdownify",
 ]
 classifiers = [
     "Programming Language :: Python :: 3",
