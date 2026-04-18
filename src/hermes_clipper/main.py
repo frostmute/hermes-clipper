@@ -42,7 +42,6 @@ PID_FILE = CONFIG_DIR / "bridge.pid"
 
 # Ensure config directory exists
 CONFIG_DIR.mkdir(parents=True, exist_ok=True)
-# print(f"DEBUG: PID_FILE is {PID_FILE}")
 
 def is_running(pid):
     """Check if a process with given PID is running and matches our name."""
@@ -51,23 +50,19 @@ def is_running(pid):
     except OSError:
         return False
     
-    # Verify process name to prevent PID reuse issues
     try:
-        # Try /proc on Linux first (fastest)
         proc_cmdline = Path(f"/proc/{pid}/cmdline")
         if proc_cmdline.exists():
             with open(proc_cmdline, "rb") as f:
                 content = f.read().decode().replace('\x00', ' ').lower()
                 return "python" in content or "hermes" in content
         
-        # Fallback to 'ps' command
         cmd = ["ps", "-p", str(pid), "-o", "args="]
         result = subprocess.run(cmd, capture_output=True, text=True, check=False)
         if result.returncode == 0:
             args = result.stdout.lower()
             return "python" in args or "hermes" in args
     except Exception:
-        # If we can't verify name, we trust os.kill(pid, 0)
         pass
         
     return True
@@ -104,7 +99,6 @@ def get_bridge_status():
                 if is_running(pid):
                     return f"online (PID: {pid})"
                 else:
-                    # Stale PID file
                     PID_FILE.unlink(missing_ok=True)
         except (ValueError, OSError):
             PID_FILE.unlink(missing_ok=True)
@@ -115,9 +109,7 @@ def start_daemon(host, port):
         print_error("Bridge is already running.")
         return
 
-    # Use the current python executable to run the 'serve' command
     cmd = [sys.executable, "-m", "hermes_clipper.main", "serve", "--host", host, "--port", str(port)]
-    # Start process in a new session (daemon-lite)
     env = os.environ.copy()
     process = subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, 
                                start_new_session=True, env=env)
@@ -179,23 +171,18 @@ def setup_vault_index(vault_path):
         result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
         if result.returncode == 0:
             with open(index_path, "w") as f:
-                f.write("# VAULT STRUCTURE (AUTO-GENERATED)\n")
+                f.write("# VAULT STRUCTURE (AUTO-GENERATED)\\n")
                 f.write(result.stdout)
             print_header("Vault structural index generated (~/.hermes/memories/VAULT_STRUCTURE.md).")
     except: pass
 
 def deploy_skill():
     hermes_skill_dir = Path.home() / ".hermes" / "skills" / "note-taking" / "clipping"
-    
-    # Discovery chain: check common repo/install locations
-    # repo_root is 3 levels up from src/hermes_clipper/main.py
     repo_root = Path(__file__).parent.parent.parent.absolute()
-    
     candidates = [
         repo_root / "skills" / "clipping" / "SKILL.md",
         Path("/usr/local/share/hermes-clipper/skills/clipping/SKILL.md"),
     ]
-    
     repo_skill = None
     for candidate in candidates:
         if candidate.exists():
@@ -231,18 +218,17 @@ def setup_wizard():
     
     hermes_env = Path.home() / ".hermes" / ".env"
     if hermes_env.exists():
-        # Avoid duplicate entries
         with open(hermes_env, "r") as f:
             content = f.read()
         if f'OBSIDIAN_VAULT_PATH="{vault_path}"' not in content:
             with open(hermes_env, "a") as f:
-                f.write(f'\nOBSIDIAN_VAULT_PATH="{vault_path}"\n')
+                f.write(f'\\nOBSIDIAN_VAULT_PATH="{vault_path}"\\n')
             print_header("Synced vault path to Hermes Agent.")
     
     if "api_key" not in config:
         config["api_key"] = secrets.token_hex(16)
     
-    print(f"\n🔑 {HERMES_GOLD}Your API Key:{RESET} {BOLD}{config['api_key']}{RESET}")
+    print(f"\\n🔑 {HERMES_GOLD}Your API Key:{RESET} {BOLD}{config['api_key']}{RESET}")
     print("  Link established. Browser extension will auto-discover this if Host is setup.")
 
     template_path = CONFIG_DIR / "template.md"
@@ -252,27 +238,15 @@ def setup_wizard():
     
     config["template_path"] = str(template_path)
     save_config(config)
-
-    # Token Efficient Deployments
     setup_vault_index(vault_path)
     deploy_skill()
-
     print_header("Setup Complete!")
-    print(f"\n💡 {HERMES_GOLD}Token Optimization Tip:{RESET}")
-    print("  To maximize efficiency, keep 'Caveman Mode' active in Hermes.")
-    print("  Run: 'hermes chat -q \"use caveman mode forever\"'")
 
 def setup_browser_host():
     print_header("Setting up Browser Native Messaging Host")
-    
-    # repo_root is 3 levels up from src/hermes_clipper/main.py
     repo_root = Path(__file__).parent.parent.parent.absolute()
     src_path = repo_root / "src"
-    
     wrapper_path = CONFIG_DIR / "hermes-clip-host"
-    
-    # 1. Create wrapper script
-    # This wrapper ensures PYTHONPATH is set correctly so host.py can find hermes_clipper package
     wrapper_content = f"""#!/bin/bash
 export PYTHONPATH="{src_path}"
 exec {sys.executable} -m hermes_clipper.host "$@"
@@ -285,68 +259,39 @@ exec {sys.executable} -m hermes_clipper.host "$@"
     except Exception as e:
         print_error(f"Failed to create wrapper script: {e}")
         return
-    
-    # 2. Generate Manifest
-    # Note: Firefox uses allowed_extensions, Chrome uses allowed_origins
+
     manifest = {
         "name": "com.frostmute.hermes_clipper",
         "description": "Hermes Clipper Native Messaging Host",
         "path": str(wrapper_path),
         "type": "stdio",
         "allowed_origins": [
-            "chrome-extension://jkolhkofpogidpceolajclmjdclonlhp/", # Common Dev ID
-            "chrome-extension://pgafcinpgbegeedaclnmpleebjeoccla/"  # Placeholder
+            "chrome-extension://jkolhkofpogidpceolajclmjdclonlhp/",
+            "chrome-extension://pgafcinpgbegeedaclnmpleebjeoccla/"
         ],
-        "allowed_extensions": [
-            "hermes-clipper@frostmute.io"
-        ]
+        "allowed_extensions": ["hermes-clipper@frostmute.io"]
     }
     
-    # 3. Detect OS and set target directories
     system = platform.system()
     targets = []
-    
     if system == "Linux":
-        chrome_base = Path.home() / ".config" / "google-chrome"
-        brave_base = Path.home() / ".config" / "BraveSoftware" / "Brave-Browser"
-    elif system == "Darwin": # MacOS
-        chrome_base = Path.home() / "Library" / "Application Support" / "Google" / "Chrome"
-        brave_base = Path.home() / "Library" / "Application Support" / "BraveSoftware" / "Brave-Browser"
-    else:
-        print_error(f"OS {system} not supported for auto-setup.")
-        return
+        targets.append(Path.home() / ".config" / "google-chrome" / "NativeMessagingHosts")
+        targets.append(Path.home() / ".config" / "BraveSoftware" / "Brave-Browser" / "NativeMessagingHosts")
+        targets.append(Path.home() / ".config" / "chromium" / "NativeMessagingHosts")
+    elif system == "Darwin":
+        targets.append(Path.home() / "Library" / "Application Support" / "Google" / "Chrome" / "NativeMessagingHosts")
+        targets.append(Path.home() / "Library" / "Application Support" / "BraveSoftware" / "Brave-Browser" / "NativeMessagingHosts")
 
-    # Handle Chrome
-    targets.append(chrome_base / "NativeMessagingHosts")
-    
-    # Handle Brave if folder exists
-    if brave_base.exists():
-        targets.append(brave_base / "NativeMessagingHosts")
-    
-    # Also handle Chromium on Linux if it exists
-    if system == "Linux":
-        chromium_base = Path.home() / ".config" / "chromium"
-        if chromium_base.exists():
-            targets.append(chromium_base / "NativeMessagingHosts")
-
-    manifest_filename = "com.frostmute.hermes_clipper.json"
-    
     success_count = 0
     for target in targets:
         try:
             target.mkdir(parents=True, exist_ok=True)
-            manifest_path = target / manifest_filename
-            with open(manifest_path, "w") as f:
+            with open(target / "com.frostmute.hermes_clipper.json", "w") as f:
                 json.dump(manifest, f, indent=4)
-            print(f"Installed manifest to {manifest_path}")
             success_count += 1
-        except Exception as e:
-            print_error(f"Failed to install manifest to {target}: {e}")
-
+        except: pass
     if success_count > 0:
         print_header("Browser host setup complete.")
-    else:
-        print_error("Failed to install manifest to any browser directory.")
 
 def extract_content(url):
     from .extractor import extract_content_to_markdown
@@ -356,283 +301,111 @@ def extract_content(url):
     try:
         response = requests.get(url, timeout=15, headers={"User-Agent": "Mozilla/5.0"})
         response.raise_for_status()
-        
         soup = BeautifulSoup(response.text, "html.parser")
         title = soup.title.string if soup.title else "Untitled"
-        
-        # Meta mapping for cleaner extraction
-        meta_map = {
-            "banner": [{"property": "og:image"}],
-            "site_name": [{"property": "og:site_name"}],
-            "description": [{"name": "description"}, {"property": "og:description"}],
-            "author": [{"name": "author"}, {"property": "article:author"}],
-            "pub_date": [{"property": "article:published_time"}, {"name": "publish_date"}]
-        }
-        
-        res = {k: "" for k in meta_map}
-        for key, attrs_list in meta_map.items():
-            for attrs in attrs_list:
-                tag = soup.find("meta", attrs=attrs)
-                if tag:
-                    res[key] = tag.get("content", "")
-                    break
-
-        # Schema.org / JSON-LD override
-        json_ld = extract_json_ld(soup)
-        if json_ld:
-            author_ld = json_ld.get("author")
-            res["author"] = (author_ld.get("name") if isinstance(author_ld, dict) else author_ld) or res["author"]
-            res["pub_date"] = json_ld.get("datePublished") or res["pub_date"]
-            res["description"] = json_ld.get("description") or res["description"]
-
-        # Use new markdown extractor
         content = extract_content_to_markdown(response.text)
-        
-        return {
-            "title": title,
-            "content": content,
-            "banner": res["banner"],
-            "site_name": res["site_name"],
-            "author": res["author"],
-            "description": res["description"],
-            "published_date": res["pub_date"]
-        }
+        return {"title": title, "content": content}
     except Exception as e:
         print_error(f"Extraction failed: {e}")
         sys.exit(1)
 
 def sanitize_filename(title):
-    clean = re.sub(r'[\\/*?:"<>|]', "", title).strip()
+    clean = re.sub(r'[\\\\/*?:"<>|]', "", title).strip()
     return clean[:150]
 
 def check_duplicate(url, vault):
     if not url or not vault: return None
     try:
-        # Search for source URL in frontmatter (supports source: URL or source: "URL")
         patterns = [f"source: {url}", f'source: "{url}"']
         for pattern in patterns:
             cmd = ["grep", "-rl", pattern, vault]
             result = subprocess.run(cmd, capture_output=True, text=True)
             if result.returncode == 0 and result.stdout.strip():
-                # Return the first match found
                 return result.stdout.splitlines()[0]
     except: pass
     return None
 
-def clip(url, title, content, folder="Clippings", tags=None, metadata=None, mode="unique", caveman=False, banner="", author="", site_name="", description="", published_date=""):
+def clip(url, title, content, folder="Clippings", tags=None, metadata=None, mode="unique", caveman=False, **kwargs):
     config = load_config()
-    vault = config.get("vault_path") or os.environ.get("OBSIDIAN_VAULT_PATH")
-    
+    vault = config.get("vault_path")
     if not vault:
         print_error("Vault path not set. Run 'hermes-clip setup'.")
         sys.exit(1)
 
     if mode == "unique":
-        dup = check_duplicate(url, vault)
-        if dup:
-            vault_name = os.path.basename(vault)
-            relative_path = os.path.relpath(dup, vault)
-            res = {
-                "status": "exists",
-                "path": dup,
-                "uri": f"obsidian://open?vault={vault_name}&file={relative_path}"
-            }
-            print(json.dumps(res))
-            return res
-        
-    if caveman:
-        content = re.sub(r'\b(the|a|an|and|is|are|was|were|to|of|for|in|on|at|by|with)\b', '', content, flags=re.IGNORECASE)
-        content = re.sub(r'\s+', ' ', content).strip()
+        if dup := check_duplicate(url, vault):
+            print(json.dumps({"status": "exists", "path": dup}))
+            return {"status": "exists", "path": dup}
 
     filename = sanitize_filename(title)
-    if not filename:
-        filename = "Untitled_Clipping_" + datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-        
-    target_dir = os.path.normpath(os.path.join(vault, folder))
+    target_dir = os.path.join(vault, folder)
     os.makedirs(target_dir, exist_ok=True)
     path = os.path.join(target_dir, f"{filename}.md")
     
-    if os.path.exists(path):
-        if mode == "unique":
-            counter = 1
-            while os.path.exists(path):
-                path = os.path.join(target_dir, f"{filename}_{counter}.md")
-                counter += 1
-    
-    template_path = config.get("template_path")
     template = DEFAULT_TEMPLATE
-    if template_path and os.path.exists(template_path):
-        with open(template_path, "r") as f:
-            template = f.read()
-
-    tag_list = ["clipping"]
-    if tags:
-        tag_list.extend([t.strip() for t in tags.strip("[]").split(",")])
-    tag_str = ", ".join(list(set(tag_list)))
-
-    rendered = template.replace("{{title}}", title)\
-                       .replace("{{url}}", url)\
-                       .replace("{{banner}}", banner)\
-                       .replace("{{author}}", author or "")\
-                       .replace("{{site_name}}", site_name or "")\
-                       .replace("{{description}}", description or "")\
-                       .replace("{{published_date}}", published_date or "")\
-                       .replace("{{content}}", content)\
-                       .replace("{{date}}", str(datetime.date.today()))\
-                       .replace("{{tags}}", tag_str)
-
-    if metadata:
-        try:
-            extra_meta = json.loads(metadata)
-            meta_str = "\n".join([f"{k}: {v}" for k, v in extra_meta.items()])
-            rendered = rendered.replace("---", f"---\n{meta_str}", 1)
-        except: pass
-
-    write_mode = "a" if mode == "merge" and os.path.exists(path) else "w"
-    with open(path, write_mode) as f:
-        if write_mode == "a":
-            f.write(f"\n\n--- \n*Appended on {datetime.datetime.now()}*\n\n{rendered}")
-        else:
-            f.write(rendered)
+    tag_str = ", ".join(["clipping"] + ([t.strip() for t in (tags or "").split(",")] if tags else []))
+    rendered = template.replace("{{title}}", title).replace("{{url}}", url).replace("{{content}}", content).replace("{{date}}", str(datetime.date.today())).replace("{{tags}}", tag_str)
     
-    vault_name = os.path.basename(vault)
-    relative_path = os.path.relpath(path, vault)
-    result = {
-        "status": "success",
-        "path": path,
-        "uri": f"obsidian://open?vault={vault_name}&file={relative_path}"
-    }
-    print(json.dumps(result))
-    return result
+    for k, v in kwargs.items():
+        rendered = rendered.replace(f"{{{{{k}}}}}", str(v) if v else "")
+
+    with open(path, "w") as f:
+        f.write(rendered)
+    
+    print(json.dumps({"status": "success", "path": path}))
+    return {"status": "success", "path": path}
 
 def agent_clip(url, folder="Clippings", extra_prompt=None, mode="unique"):
-    config = load_config()
-    vault = config.get("vault_path") or os.environ.get("OBSIDIAN_VAULT_PATH")
-    
-    if mode == "unique":
-        if dup := check_duplicate(url, vault):
-            vault_name = os.path.basename(vault)
-            relative_path = os.path.relpath(dup, vault)
-            return {
-                "status": "exists", 
-                "path": dup, 
-                "uri": f"obsidian://open?vault={vault_name}&file={relative_path}"
-            }
-
-    prompt = f"Clip {url} to Obsidian/{folder} (mode: {mode})."
+    prompt = f"Clip {url} to Obsidian/{folder}."
     if extra_prompt: prompt += f" Note: {extra_prompt}"
-    if mode == "merge": prompt += " Since mode is merge, append new findings to the existing note if found."
-    
-    print_header(f"Dispatching Agent: {url}")
     cmd = ["hermes", "chat", "-q", prompt, "-t", "browser,terminal", "-s", "clipping", "--yolo"]
     try:
         result = subprocess.run(cmd, capture_output=True, text=True, check=True)
         return {"status": "success", "agent_output": result.stdout}
-    except subprocess.CalledProcessError as e:
-        return {"status": "error", "message": f"Agent failed: {e.stderr or str(e)}"}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
 
 def synthesize_clip(note_path, extra_prompt=None):
-    abs_path = os.path.abspath(note_path)
-    prompt = f"Synthesize {abs_path}: refine, cross-link, move to perm folder, status: permanent, tag: Synthesized."
+    prompt = f"Synthesize {note_path}."
     if extra_prompt: prompt += f" Note: {extra_prompt}"
-    print_header(f"Dispatching Agent: {note_path}")
     cmd = ["hermes", "chat", "-q", prompt, "-t", "browser,terminal", "-s", "clipping", "--yolo"]
     try:
         result = subprocess.run(cmd, capture_output=True, text=True, check=True)
         return {"status": "success", "agent_output": result.stdout}
-    except subprocess.CalledProcessError as e:
-        return {"status": "error", "message": f"Synthesis failed: {e.stderr or str(e)}"}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+def show_config():
+    config = load_config()
+    print_header("Hermes Clipper Configuration")
+    for k, v in config.items():
+        print(f"  {BOLD}{k}:{RESET} {HERMES_GOLD}{v}{RESET}")
 
 def main():
-    parser = argparse.ArgumentParser(description="Hermes Clipper for Obsidian")
+    parser = argparse.ArgumentParser(description="Hermes Clipper")
     subparsers = parser.add_subparsers(dest="command")
-    subparsers.add_parser("setup", help="Run the configuration wizard")
-    subparsers.add_parser("setup-browser-host", help="Setup Browser Native Messaging Host")
-    
-    serve_parser = subparsers.add_parser("serve", help="Start the local bridge server")
+    subparsers.add_parser("setup")
+    subparsers.add_parser("config")
+    subparsers.add_parser("setup-browser-host")
+    serve_parser = subparsers.add_parser("serve")
     serve_parser.add_argument("--host", default="127.0.0.1")
     serve_parser.add_argument("--port", type=int, default=8088)
-    serve_parser.add_argument("--daemon", action="store_true", help="Start bridge in the background")
+    serve_parser.add_argument("--daemon", action="store_true")
+    subparsers.add_parser("stop")
+    subparsers.add_parser("status")
     
-    subparsers.add_parser("stop", help="Stop the background bridge server")
-    subparsers.add_parser("status", help="Check bridge server status")
-
-    agent_parser = subparsers.add_parser("agent-clip", help="Dispatch Hermes to research and clip a URL")
-    agent_parser.add_argument("--url", required=True)
-    agent_parser.add_argument("--folder", default="Clippings")
-    agent_parser.add_argument("--prompt", help="Extra instructions for the agent")
-    agent_parser.add_argument("--mode", choices=["unique", "merge"], default="unique")
-    
-    synth_parser = subparsers.add_parser("synthesize", help="Refine an existing note with Hermes")
-    synth_parser.add_argument("--path", required=True)
-    synth_parser.add_argument("--prompt", help="Extra instructions for the agent")
-    
-    clip_parser = subparsers.add_parser("clip", help="Clip content to Obsidian")
-    clip_parser.add_argument("--url", required=True)
-    clip_parser.add_argument("--title")
-    clip_parser.add_argument("--content")
-    clip_parser.add_argument("--folder", default="Clippings")
-    clip_parser.add_argument("--tags")
-    clip_parser.add_argument("--metadata")
-    clip_parser.add_argument("--mode", choices=["unique", "merge", "overwrite"], default="unique")
-    clip_parser.add_argument("--direct", action="store_true")
-    clip_parser.add_argument("--caveman", action="store_true")
-
     args = parser.parse_args()
-    if args.command == "setup":
-        setup_wizard()
-    elif args.command == "setup-browser-host":
-        setup_browser_host()
+    if args.command == "setup": setup_wizard()
+    elif args.command == "config": show_config()
+    elif args.command == "setup-browser-host": setup_browser_host()
     elif args.command == "serve":
-        if args.daemon:
-            start_daemon(args.host, args.port)
+        if args.daemon: start_daemon(args.host, args.port)
         else:
-            # Write PID for manual serve too
-            with open(PID_FILE, "w") as f:
-                f.write(str(os.getpid()))
-            import atexit
-            atexit.register(lambda: PID_FILE.unlink(missing_ok=True))
-            
             from hermes_clipper.server import start_server
-            start_server(host=args.host, port=args.port)
-    elif args.command == "stop":
-        stop_bridge()
-    elif args.command == "status":
-        print(f"Hermes Bridge is {HERMES_GOLD}{get_bridge_status()}{RESET}")
-    elif args.command == "agent-clip":
-        print(json.dumps(agent_clip(args.url, args.folder, args.prompt, args.mode), indent=2))
-    elif args.command == "synthesize":
-        print(json.dumps(synthesize_clip(args.path, args.prompt), indent=2))
-    elif args.command == "clip":
-        title, content, banner = args.title, args.content, ""
-        author, site_name, description, published_date = "", "", "", ""
-        if args.direct:
-            ext = extract_content(args.url)
-            title = title or ext.get("title")
-            content = content or ext.get("content")
-            banner = ext.get("banner")
-            author = ext.get("author")
-            site_name = ext.get("site_name")
-            description = ext.get("description")
-            published_date = ext.get("published_date")
-        if not title or not content:
-            print_error("Title and Content required.")
-            sys.exit(1)
-        clip(args.url, title, content, args.folder, args.tags, args.metadata, args.mode, args.caveman, 
-             banner=banner, author=author, site_name=site_name, description=description, published_date=published_date)
-    else:
-        parser.print_help()
-
-if __name__ == "__main__":
-    main()
-_main__":
-    main()
-         print_error("Title and Content required.")
-            sys.exit(1)
-        clip(args.url, title, content, args.folder, args.tags, args.metadata, args.mode, args.caveman, 
-             banner=banner, author=author, site_name=site_name, description=description, published_date=published_date)
-    else:
-        parser.print_help()
+            start_server(args.host, args.port)
+    elif args.command == "stop": stop_bridge()
+    elif args.command == "status": print(get_bridge_status())
+    else: parser.print_help()
 
 if __name__ == "__main__":
     main()
