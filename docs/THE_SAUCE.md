@@ -40,9 +40,9 @@ The system handles "useful info" vs. "noise" through the **Move Logic**.
 
 ### Layer D: The Structural Index (Vault Mapping)
 Why let the Agent `ls` your entire drive? 
-The setup wizard generates `~/.hermes/memories/VAULT_STRUCTURE.md`. 
+The setup wizard generates `~/.hermes/memories/VAULT_STRUCTURE.md`, and the **Bridge Server's watchdog hook** keeps it in sync in real-time.
 - **The Move:** The Agent reads this ~1KB index to decide folder placement instantly.
-- **Result:** ~90% reduction in discovery tokens.
+- **Result:** ~90% reduction in discovery tokens and zero manual index management.
 
 ### Layer E: The Grep Sieve (Duplicate Prevention)
 The CLI uses local `grep` to check if a URL's source has already been clipped.
