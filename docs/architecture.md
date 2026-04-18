@@ -16,9 +16,11 @@ Hermes Clipper is built on a modular, agent-first architecture:
     - **Function:** Logic for Hermes to research, search the vault for context, and intelligently file new clippings.
 - **Bridge Server:**
     - **Implementation:** FastAPI server running on `localhost:8088`.
+    - **Lifecycle Management:** Managed as a persistent CLI daemon (`hermes-clip serve --daemon`).
     - **Endpoints:**
         - `POST /clip`: Direct clipping of provided content.
         - `POST /agent/clip`: Dispatches a background Hermes Agent for autonomous research and clipping ("Agent-Mode").
+        - `GET /status`: Health check for the bridge.
 
 ### Token Optimization Layer
 - **Vault Indexing:** Setup generates `~/.hermes/memories/VAULT_STRUCTURE.md`. Agent reads this ~1KB file instead of running `ls -R` (potentially ~100KB+ output).

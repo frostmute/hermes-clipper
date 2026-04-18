@@ -72,7 +72,13 @@ Hermes Clipper is composed of five modular components:
    ```
    *Note: This generates your API Key, deploys the optimized Skill to Hermes, and builds your Vault Structural Index.*
 
-3. **Install Browser Extension:**
+3. **Start the Bridge:**
+   ```bash
+   hermes-clip serve --daemon
+   ```
+   *Note: Use `hermes-clip status` to verify and `hermes-clip stop` to shut it down.*
+
+4. **Install Browser Extension:**
    - Open Chrome/Firefox Extensions page.
    - Enable "Developer Mode".
    - "Load unpacked" and select the `extension/` folder in this repo.

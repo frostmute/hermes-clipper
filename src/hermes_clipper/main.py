@@ -37,12 +37,74 @@ except ImportError:
 
 CONFIG_DIR = Path.home() / ".config" / "hermes-clipper"
 CONFIG_FILE = CONFIG_DIR / "config.json"
+PID_FILE = CONFIG_DIR / "bridge.pid"
+
+# Ensure config directory exists
+CONFIG_DIR.mkdir(parents=True, exist_ok=True)
+# print(f"DEBUG: PID_FILE is {PID_FILE}")
+
+def is_running(pid):
+    try:
+        os.kill(pid, 0)
+    except OSError:
+        return False
+    return True
+
+def write_pid(pid):
+    with open(PID_FILE, "w") as f:
+        f.write(str(pid))
+
+def stop_bridge():
+    if PID_FILE.exists():
+        with open(PID_FILE, "r") as f:
+            try:
+                pid = int(f.read().strip())
+                if is_running(pid):
+                    os.kill(pid, 15)  # SIGTERM
+                    print_header(f"Stopped bridge (PID: {pid})")
+                else:
+                    print_error("Bridge PID file exists but process is not running.")
+            except:
+                print_error("Invalid PID file.")
+        PID_FILE.unlink(missing_ok=True)
+    else:
+        print_error("Bridge is not running (no PID file).")
+
+def get_bridge_status():
+    if PID_FILE.exists():
+        with open(PID_FILE, "r") as f:
+            try:
+                pid = int(f.read().strip())
+                if is_running(pid):
+                    return f"online (PID: {pid})"
+            except: pass
+    return "offline"
+
+def start_daemon(host, port):
+    if get_bridge_status() != "offline":
+        print_error("Bridge is already running.")
+        return
+
+    # Use the current python executable to run the 'serve' command
+    cmd = [sys.executable, "-m", "hermes_clipper.main", "serve", "--host", host, "--port", str(port)]
+    # Start process in a new session (daemon-lite)
+    env = os.environ.copy()
+    process = subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, 
+                               start_new_session=True, env=env)
+    
+    write_pid(process.pid)
+    print_header(f"Bridge started in background (PID: {process.pid})")
+    print(f"📡 Listening on http://{host}:{port}")
 
 DEFAULT_TEMPLATE = """---
 title: "{{title}}"
 source: {{url}}
+author: "{{author}}"
+site: "{{site_name}}"
 banner: "{{banner}}"
 clipped: {{date}}
+published: {{published_date}}
+description: "{{description}}"
 tags: [{{tags}}]
 status: unread
 ---
@@ -51,6 +113,22 @@ status: unread
 
 {{content}}
 """
+
+def extract_json_ld(soup):
+    try:
+        scripts = soup.find_all("script", type="application/ld+json")
+        for script in scripts:
+            try:
+                data = json.loads(script.string)
+                if isinstance(data, list):
+                    for item in data:
+                        if item.get("@type") in ["Article", "NewsArticle", "BlogPosting", "WebPage"]:
+                            return item
+                elif data.get("@type") in ["Article", "NewsArticle", "BlogPosting", "WebPage"]:
+                    return data
+            except: continue
+    except: pass
+    return {}
 
 def load_config():
     if CONFIG_FILE.exists():
@@ -162,18 +240,44 @@ def extract_content(url):
         soup = BeautifulSoup(response.text, "html.parser")
         title = soup.title.string if soup.title else "Untitled"
         
-        banner = ""
-        og_image = soup.find("meta", property="og:image")
-        if og_image:
-            banner = og_image.get("content", "")
+        # Meta mapping for cleaner extraction
+        meta_map = {
+            "banner": [{"property": "og:image"}],
+            "site_name": [{"property": "og:site_name"}],
+            "description": [{"name": "description"}, {"property": "og:description"}],
+            "author": [{"name": "author"}, {"property": "article:author"}],
+            "pub_date": [{"property": "article:published_time"}, {"name": "publish_date"}]
+        }
+        
+        res = {k: "" for k in meta_map}
+        for key, attrs_list in meta_map.items():
+            for attrs in attrs_list:
+                tag = soup.find("meta", attrs=attrs)
+                if tag:
+                    res[key] = tag.get("content", "")
+                    break
+
+        # Schema.org / JSON-LD override
+        json_ld = extract_json_ld(soup)
+        if json_ld:
+            author_ld = json_ld.get("author")
+            res["author"] = (author_ld.get("name") if isinstance(author_ld, dict) else author_ld) or res["author"]
+            res["pub_date"] = json_ld.get("datePublished") or res["pub_date"]
+            res["description"] = json_ld.get("description") or res["description"]
 
         doc = Document(response.text)
         content_html = doc.summary()
+        content = BeautifulSoup(content_html, "html.parser").get_text(separator="\n", strip=True)
         
-        content_soup = BeautifulSoup(content_html, "html.parser")
-        content = content_soup.get_text(separator="\n", strip=True)
-        
-        return title, content, banner
+        return {
+            "title": title,
+            "content": content,
+            "banner": res["banner"],
+            "site_name": res["site_name"],
+            "author": res["author"],
+            "description": res["description"],
+            "published_date": res["pub_date"]
+        }
     except Exception as e:
         print_error(f"Extraction failed: {e}")
         sys.exit(1)
@@ -196,7 +300,7 @@ def check_duplicate(url, vault):
     except: pass
     return None
 
-def clip(url, title, content, folder="Clippings", tags=None, metadata=None, mode="unique", caveman=False, banner=""):
+def clip(url, title, content, folder="Clippings", tags=None, metadata=None, mode="unique", caveman=False, banner="", author="", site_name="", description="", published_date=""):
     config = load_config()
     vault = config.get("vault_path") or os.environ.get("OBSIDIAN_VAULT_PATH")
     
@@ -250,6 +354,10 @@ def clip(url, title, content, folder="Clippings", tags=None, metadata=None, mode
     rendered = template.replace("{{title}}", title)\
                        .replace("{{url}}", url)\
                        .replace("{{banner}}", banner)\
+                       .replace("{{author}}", author or "")\
+                       .replace("{{site_name}}", site_name or "")\
+                       .replace("{{description}}", description or "")\
+                       .replace("{{published_date}}", published_date or "")\
                        .replace("{{content}}", content)\
                        .replace("{{date}}", str(datetime.date.today()))\
                        .replace("{{tags}}", tag_str)
@@ -320,17 +428,25 @@ def main():
     parser = argparse.ArgumentParser(description="Hermes Clipper for Obsidian")
     subparsers = parser.add_subparsers(dest="command")
     subparsers.add_parser("setup", help="Run the configuration wizard")
+    
     serve_parser = subparsers.add_parser("serve", help="Start the local bridge server")
     serve_parser.add_argument("--host", default="127.0.0.1")
     serve_parser.add_argument("--port", type=int, default=8088)
+    serve_parser.add_argument("--daemon", action="store_true", help="Start bridge in the background")
+    
+    subparsers.add_parser("stop", help="Stop the background bridge server")
+    subparsers.add_parser("status", help="Check bridge server status")
+
     agent_parser = subparsers.add_parser("agent-clip", help="Dispatch Hermes to research and clip a URL")
     agent_parser.add_argument("--url", required=True)
     agent_parser.add_argument("--folder", default="Clippings")
     agent_parser.add_argument("--prompt", help="Extra instructions for the agent")
     agent_parser.add_argument("--mode", choices=["unique", "merge"], default="unique")
+    
     synth_parser = subparsers.add_parser("synthesize", help="Refine an existing note with Hermes")
     synth_parser.add_argument("--path", required=True)
     synth_parser.add_argument("--prompt", help="Extra instructions for the agent")
+    
     clip_parser = subparsers.add_parser("clip", help="Clip content to Obsidian")
     clip_parser.add_argument("--url", required=True)
     clip_parser.add_argument("--title")
@@ -346,21 +462,42 @@ def main():
     if args.command == "setup":
         setup_wizard()
     elif args.command == "serve":
-        from hermes_clipper.server import start_server
-        start_server(host=args.host, port=args.port)
+        if args.daemon:
+            start_daemon(args.host, args.port)
+        else:
+            # Write PID for manual serve too
+            with open(PID_FILE, "w") as f:
+                f.write(str(os.getpid()))
+            import atexit
+            atexit.register(lambda: PID_FILE.unlink(missing_ok=True))
+            
+            from hermes_clipper.server import start_server
+            start_server(host=args.host, port=args.port)
+    elif args.command == "stop":
+        stop_bridge()
+    elif args.command == "status":
+        print(f"Hermes Bridge is {HERMES_GOLD}{get_bridge_status()}{RESET}")
     elif args.command == "agent-clip":
         print(json.dumps(agent_clip(args.url, args.folder, args.prompt, args.mode), indent=2))
     elif args.command == "synthesize":
         print(json.dumps(synthesize_clip(args.path, args.prompt), indent=2))
     elif args.command == "clip":
         title, content, banner = args.title, args.content, ""
+        author, site_name, description, published_date = "", "", "", ""
         if args.direct:
-            title_ext, content_ext, banner_ext = extract_content(args.url)
-            title, content, banner = title or title_ext, content or content_ext, banner_ext
+            ext = extract_content(args.url)
+            title = title or ext.get("title")
+            content = content or ext.get("content")
+            banner = ext.get("banner")
+            author = ext.get("author")
+            site_name = ext.get("site_name")
+            description = ext.get("description")
+            published_date = ext.get("published_date")
         if not title or not content:
             print_error("Title and Content required.")
             sys.exit(1)
-        clip(args.url, title, content, args.folder, args.tags, args.metadata, args.mode, args.caveman, banner)
+        clip(args.url, title, content, args.folder, args.tags, args.metadata, args.mode, args.caveman, 
+             banner=banner, author=author, site_name=site_name, description=description, published_date=published_date)
     else:
         parser.print_help()
 
