@@ -242,7 +242,7 @@ def setup_wizard():
     deploy_skill()
     print_header("Setup Complete!")
 
-def setup_browser_host():
+def setup_browser_host(extension_id=None):
     print_header("Setting up Browser Native Messaging Host")
     repo_root = Path(__file__).parent.parent.parent.absolute()
     src_path = repo_root / "src"
@@ -260,15 +260,20 @@ exec {sys.executable} -m hermes_clipper.host "$@"
         print_error(f"Failed to create wrapper script: {e}")
         return
 
+    allowed_origins = [
+        "chrome-extension://jkolhkofpogidpceolajclmjdclonlhp/",
+        "chrome-extension://pgafcinpgbegeedaclnmpleebjeoccla/"
+    ]
+    if extension_id:
+        allowed_origins.append(f"chrome-extension://{extension_id}/")
+        print(f"Added custom extension ID: {HERMES_GOLD}{extension_id}{RESET}")
+
     manifest = {
         "name": "com.frostmute.hermes_clipper",
         "description": "Hermes Clipper Native Messaging Host",
         "path": str(wrapper_path),
         "type": "stdio",
-        "allowed_origins": [
-            "chrome-extension://jkolhkofpogidpceolajclmjdclonlhp/",
-            "chrome-extension://pgafcinpgbegeedaclnmpleebjeoccla/"
-        ],
+        "allowed_origins": allowed_origins,
         "allowed_extensions": ["hermes-clipper@frostmute.io"]
     }
     
@@ -386,7 +391,8 @@ def main():
     subparsers = parser.add_subparsers(dest="command")
     subparsers.add_parser("setup")
     subparsers.add_parser("config")
-    subparsers.add_parser("setup-browser-host")
+    host_parser = subparsers.add_parser("setup-browser-host", help="Setup Browser Native Messaging Host")
+    host_parser.add_argument("--extension-id", help="Optional: Your specific Browser Extension ID")
     serve_parser = subparsers.add_parser("serve")
     serve_parser.add_argument("--host", default="127.0.0.1")
     serve_parser.add_argument("--port", type=int, default=8088)
@@ -397,7 +403,7 @@ def main():
     args = parser.parse_args()
     if args.command == "setup": setup_wizard()
     elif args.command == "config": show_config()
-    elif args.command == "setup-browser-host": setup_browser_host()
+    elif args.command == "setup-browser-host": setup_browser_host(args.extension_id)
     elif args.command == "serve":
         if args.daemon: start_daemon(args.host, args.port)
         else:

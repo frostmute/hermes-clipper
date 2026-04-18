@@ -76,7 +76,10 @@ Hermes Clipper is composed of five modular components:
    ```bash
    hermes-clip setup-browser-host
    ```
-   *Note: This installs the Native Messaging manifest for Chrome/Brave/Chromium, allowing the browser to wake up the bridge if it's offline.*
+   *Note: If the extension fails to link, find your Extension ID on `chrome://extensions` and run:*
+   ```bash
+   hermes-clip setup-browser-host --extension-id YOUR_ID_HERE
+   ```
 
 4. **Start the Bridge:**
    ```bash
@@ -85,17 +88,14 @@ Hermes Clipper is composed of five modular components:
    *Note: Use `hermes-clip status` to verify and `hermes-clip stop` to shut it down.*
 
 5. **Install Browser Extension:**
-   - Open Chrome/Firefox Extensions page.
-   - Enable "Developer Mode".
-   - "Load unpacked" and select the `extension/` folder in this repo.
-   - **Configuration:** Open the extension popup, right-click and select "Inspect", then run this in the console to save your API Key:
-     ```javascript
-     localStorage.setItem('hermes_api_key', 'YOUR_API_KEY_HERE');
-     ```
+   - Open Chrome/Brave Extensions page (`chrome://extensions`).
+   - Enable "Developer Mode" (top right).
+   - Click "Load unpacked" and select the `extension/` folder in this repo.
+   - **Linking:** The extension will auto-discover your API Key via Native Messaging. No manual pasting required.
 
-4. **Install Obsidian Plugin:**
+6. **Install Obsidian Plugin:**
    - Copy `obsidian-plugin/` contents to `<vault>/.obsidian/plugins/hermes-clipper/`.
-   - Enable in Obsidian settings and enter your API Key.
+   - Enable in Obsidian settings and enter your API Key (run `hermes-clip config` to find it).
 
 ---
 
