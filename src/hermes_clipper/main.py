@@ -241,8 +241,9 @@ def setup_wizard():
     
     if "api_key" not in config:
         config["api_key"] = secrets.token_hex(16)
-        print(f"Generated API Key: {HERMES_GOLD}{config['api_key']}{RESET}")
-        print("Save this. You'll need it for the extension and plugin.")
+    
+    print(f"\n🔑 {HERMES_GOLD}Your API Key:{RESET} {BOLD}{config['api_key']}{RESET}")
+    print("  Link established. Browser extension will auto-discover this if Host is setup.")
 
     template_path = CONFIG_DIR / "template.md"
     if not template_path.exists():
@@ -616,6 +617,17 @@ def main():
             published_date = ext.get("published_date")
         if not title or not content:
             print_error("Title and Content required.")
+            sys.exit(1)
+        clip(args.url, title, content, args.folder, args.tags, args.metadata, args.mode, args.caveman, 
+             banner=banner, author=author, site_name=site_name, description=description, published_date=published_date)
+    else:
+        parser.print_help()
+
+if __name__ == "__main__":
+    main()
+_main__":
+    main()
+         print_error("Title and Content required.")
             sys.exit(1)
         clip(args.url, title, content, args.folder, args.tags, args.metadata, args.mode, args.caveman, 
              banner=banner, author=author, site_name=site_name, description=description, published_date=published_date)

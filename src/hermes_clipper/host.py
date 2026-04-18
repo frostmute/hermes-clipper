@@ -42,7 +42,17 @@ def main():
             if message is None:
                 break
             
-            # Implementation logic
+            # Action-based logic for auto-discovery and setup
+            action = message.get("action")
+            if action == "get_config":
+                send_message({
+                    "status": "success",
+                    "api_key": api_key,
+                    "bridge_url": config.get("bridge_url", "http://127.0.0.1:8088")
+                })
+                continue
+
+            # Implementation logic for clipping
             # If bridge is offline, call start_daemon and wait a bit
             if get_bridge_status() == "offline":
                 # Suppress stdout to avoid corrupting native messaging protocol

@@ -42,10 +42,10 @@ Explore the technical depth of the Hermes Clipper ecosystem:
 Hermes Clipper is composed of five modular components:
 
 1.  **🧠 The Brain (Skill):** Optimized procedural logic for Hermes Agent. Now features **Head Extraction** (~4k chars) for categorization efficiency.
-2.  **📡 The Bridge (FastAPI):** A secure local gateway connecting browsers and plugins to the Agent.
-3.  **🛰️ The Scout (Extension):** A sleek Chrome/Firefox extension for 1-click capture.
-4.  **🔨 The Hand (CLI):** A powerful standalone tool featuring a smart setup wizard that auto-provisions your Agent's memory.
-5.  **🏡 The Garden (Plugin):** An Obsidian ribbon interface for synthesis and status monitoring.
+2.  **📡 The Bridge (FastAPI):** High-performance local gateway. Features secure X-API-Key handling and real-time Vault Index auto-syncing.
+3.  **🛰️ The Scout (Extension):** Manifest V3 extension. Zero-config **auto-linking** via Native Messaging with async task tracking.
+4.  **🏡 The Garden (Plugin):** Obsidian Ribbon interface for deep synthesis and automated file migration.
+5.  **🔨 The Hand (CLI):** Command-line provisioning wizard, extracting "meat" via Mozilla Readability algorithm.
 
 ---
 

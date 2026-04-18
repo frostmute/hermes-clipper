@@ -1,14 +1,39 @@
 document.getElementById('clipBtn').addEventListener('click', () => sendToBridge('/clip'));
 document.getElementById('agentBtn').addEventListener('click', () => sendToBridge('/agent/clip'));
 
+// Auto-discovery of API Key via Native Messaging
+window.addEventListener('DOMContentLoaded', async () => {
+  const status = document.getElementById('status');
+  const apiKey = localStorage.getItem('hermes_api_key');
+  
+  if (!apiKey) {
+    status.textContent = "Syncing with Hermes...";
+    try {
+      chrome.runtime.sendNativeMessage('com.frostmute.hermes_clipper', { action: 'get_config' }, (response) => {
+        if (chrome.runtime.lastError) {
+          status.textContent = "Auto-sync failed. Set 'hermes_api_key' in localStorage.";
+          return;
+        }
+        if (response && response.api_key) {
+          localStorage.setItem('hermes_api_key', response.api_key);
+          status.textContent = "Hermes Linked. Grunt.";
+        } else {
+          status.textContent = "Setup bridge via CLI first.";
+        }
+      });
+    } catch (err) {
+      status.textContent = "Set 'hermes_api_key' in localStorage.";
+    }
+  }
+});
+
 async function sendToBridge(endpoint) {
   const status = document.getElementById('status');
   const btn = endpoint === '/clip' ? document.getElementById('clipBtn') : document.getElementById('agentBtn');
   
-  // Quick hack: Get API Key from localStorage (User must set this once in console or we add an input later)
   const apiKey = localStorage.getItem('hermes_api_key');
   if (!apiKey) {
-    status.textContent = "Set 'hermes_api_key' in localStorage.";
+    status.textContent = "API Key missing. Link Hermes first.";
     return;
   }
 
