@@ -67,7 +67,7 @@ def setup_vault_index(vault_path):
     index_path = Path.home() / ".hermes" / "memories" / "VAULT_STRUCTURE.md"
     index_path.parent.mkdir(parents=True, exist_ok=True)
     try:
-        cmd = f'find {vault_path} -maxdepth 4 -type d | sed "s|^{vault_path}/||" | grep -v "^\\." | sort'
+        cmd = f'find {vault_path} -mindepth 1 -maxdepth 4 -type d | sed "s|^{vault_path}/||" | grep -v "^\\." | sort'
         result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
         if result.returncode == 0:
             with open(index_path, "w") as f:

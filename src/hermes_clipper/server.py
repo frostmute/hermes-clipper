@@ -7,11 +7,28 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional, List, Dict
 from .main import clip as run_clip, agent_clip as run_agent_clip, synthesize_clip, load_config
+from .watcher import VaultWatcher
 
 # Global task storage
 tasks: Dict[str, dict] = {}
+vault_watcher: Optional[VaultWatcher] = None
 
 app = FastAPI(title="Hermes Clipper Bridge")
+
+@app.on_event("startup")
+async def startup_event():
+    global vault_watcher
+    config = load_config()
+    vault_path = config.get("vault_path")
+    if vault_path:
+        vault_watcher = VaultWatcher(vault_path)
+        vault_watcher.start()
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    global vault_watcher
+    if vault_watcher:
+        vault_watcher.stop()
 
 # Security: Restrict CORS to known origins
 app.add_middleware(
