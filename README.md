@@ -76,16 +76,13 @@ Hermes Clipper is composed of five modular components:
    ```bash
    hermes-clip setup-browser-host
    ```
-   *Note: If the extension fails to link, find your Extension ID on `chrome://extensions` and run:*
-   ```bash
-   hermes-clip setup-browser-host --extension-id YOUR_ID_HERE
-   ```
+   *Note: This command will interactively prompt for your Extension ID if it's not provided. You can find your Extension ID on `chrome://extensions` (enable Developer Mode).*
 
 4. **Start the Bridge:**
    ```bash
    hermes-clip serve --daemon
    ```
-   *Note: Use `hermes-clip status` to verify and `hermes-clip stop` to shut it down.*
+   *Note: Use `hermes-clip status` to verify and `hermes-clip stop` to shut it down. The bridge now intelligently handles metadata interpolation (title, author, description, etc.) into your notes based on your `template.md`.*
 
 5. **Install Browser Extension:**
    - Open Chrome/Brave Extensions page (`chrome://extensions`).

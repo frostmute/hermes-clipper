@@ -21,10 +21,10 @@ LLMs are static, but **Agents are dynamic.** Hermes Clipper exploits this throug
 Moving web data through an LLM is expensive and slow. We solve this via a three-layered compression strategy:
 
 ### Layer A: The Sieve (Local Pre-processing)
-Before a single token is sent to the cloud, the **Hand (CLI)** uses `BeautifulSoup4` to surgically strip:
+Before a single token is sent to the cloud, the **Hand (CLI)** or **Bridge** uses the strict **Mozilla Readability algorithm** (via `readability-lxml`) to surgically extract the "meat" while stripping:
 - Navigation bars, footers, and sidebars.
 - Scripts, styles, and tracking pixels.
-- **Result:** We reduce the raw HTML payload by ~80% locally, for free.
+- **Result:** We reduce the raw payload by ~80% locally, for free, ensuring the Agent only sees the core content.
 
 ### Layer B: Linguistic Compression (Caveman Mode)
 We utilize the **Caveman Skill** to force Hermes into a high-density, low-filler communication style.
