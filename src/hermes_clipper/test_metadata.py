@@ -52,24 +52,25 @@ missing: "{{ missing_field }}"
         
         replacements = {
             "title": "Test Title",
-            "description": "Test Desc",
+            "description": "Test Desc with \\1 backreference",
             "author": "Jane Doe",
             "site_name": "My Site",
-            "content": "Test Content",
+            "content": "Test Content with \\ backslash",
             "date": str(datetime.date.today())
         }
         
         rendered = template
         for k, v in replacements.items():
             pattern = re.compile(f"\\{{\\{{\\s*{re.escape(k)}\\s*\\}}\\}}")
-            rendered = pattern.sub(str(v), rendered)
+            val = str(v)
+            rendered = pattern.sub(lambda m, val=val: val, rendered)
             
         self.assertIn('title: "Test Title"', rendered)
-        self.assertIn('desc: "Test Desc"', rendered)
+        self.assertIn('desc: "Test Desc with \\1 backreference"', rendered)
         self.assertIn('author: "Jane Doe"', rendered)
         self.assertIn('site: "My Site"', rendered)
         self.assertIn('missing: "{{ missing_field }}"', rendered)
-        self.assertIn('Test Content', rendered)
+        self.assertIn('Test Content with \\ backslash', rendered)
 
 if __name__ == "__main__":
     unittest.main()

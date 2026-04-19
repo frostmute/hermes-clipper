@@ -421,7 +421,8 @@ def clip(url, title, content, folder="Clippings", tags=None, metadata=None, mode
     for k, v in replacements.items():
         # Handle both {{key}} and {{ key }}
         pattern = re.compile(f"\\{{\\{{\\s*{re.escape(k)}\\s*\\}}\\}}")
-        rendered = pattern.sub(str(v) if v is not None else "", rendered)
+        val = str(v) if v is not None else ""
+        rendered = pattern.sub(lambda m, val=val: val, rendered)
 
     with open(path, "w") as f:
         f.write(rendered)

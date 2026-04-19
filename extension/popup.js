@@ -91,11 +91,17 @@ async function sendToBridge(endpoint) {
       status.textContent = "Done. Don't expect a medal.";
       btn.classList.remove('pulse');
     } else {
-      status.textContent = "Rejected: " + (data.detail || data.message);
+      let errorMessage = 'Unknown error';
+      if (data.detail) {
+        errorMessage = typeof data.detail === 'string' ? data.detail : JSON.stringify(data.detail);
+      } else if (data.message) {
+        errorMessage = data.message;
+      }
+      status.textContent = "Rejected: " + errorMessage;
       btn.classList.remove('pulse');
     }
   } catch (err) {
-    status.textContent = "Bridge missing. Wake it up.";
+    status.textContent = "Bridge error: " + err.message;
     btn.classList.remove('pulse');
   }
 }
