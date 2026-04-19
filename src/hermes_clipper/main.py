@@ -448,6 +448,12 @@ def agent_clip(url, folder="Clippings", extra_prompt=None, mode="unique"):
     cmd = ["hermes", "chat", "-q", prompt, "-t", "browser,terminal", "-s", "clipping", "--yolo"]
     try:
         result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+        # Check for common agent failure strings that don't trigger a non-zero exit code
+        if "Error code: 401" in result.stdout or "AuthenticationError" in result.stdout:
+             return {"status": "error", "message": "Hermes Agent Auth Error. Run 'hermes auth' in terminal."}
+        if "❌" in result.stdout and "error" in result.stdout.lower():
+             return {"status": "error", "message": "Hermes Agent failed. Check terminal output."}
+             
         return {"status": "success", "agent_output": result.stdout}
     except Exception as e:
         return {"status": "error", "message": str(e)}
@@ -467,6 +473,12 @@ def synthesize_clip(note_path, extra_prompt=None):
     cmd = ["hermes", "chat", "-q", prompt, "-t", "browser,terminal,researcher", "-s", "clipping", "--yolo"]
     try:
         result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+        # Check for common agent failure strings that don't trigger a non-zero exit code
+        if "Error code: 401" in result.stdout or "AuthenticationError" in result.stdout:
+             return {"status": "error", "message": "Hermes Agent Auth Error. Run 'hermes auth' in terminal."}
+        if "❌" in result.stdout and "error" in result.stdout.lower():
+             return {"status": "error", "message": "Hermes Agent failed. Check terminal output."}
+             
         return {"status": "success", "agent_output": result.stdout}
     except Exception as e:
         return {"status": "error", "message": str(e)}
