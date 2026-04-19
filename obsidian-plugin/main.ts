@@ -63,7 +63,13 @@ export default class HermesClipperPlugin extends Plugin {
 			if (data.status === 'accepted') {
 				this.pollTask(data.task_id);
 			} else {
-				new Notice('Hermes rejected you: ' + (data.detail || data.message));
+				let errorMessage = 'Unknown error';
+				if (data.detail) {
+					errorMessage = typeof data.detail === 'string' ? data.detail : JSON.stringify(data.detail);
+				} else if (data.message) {
+					errorMessage = data.message;
+				}
+				new Notice('Hermes rejected you: ' + errorMessage);
 				this.statusBarItemEl.setText('Hermes: Idle');
 			}
 		} catch (err) {

@@ -47,7 +47,7 @@ async function sendToBridge(endpoint) {
       func: () => ({
         url: window.location.href,
         title: document.title,
-        content: document.body.innerText
+        content: document.documentElement.outerHTML
       })
     });
 

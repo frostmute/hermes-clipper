@@ -264,9 +264,14 @@ exec {sys.executable} -m hermes_clipper.host "$@"
         "chrome-extension://jkolhkofpogidpceolajclmjdclonlhp/",
         "chrome-extension://pgafcinpgbegeedaclnmpleebjeoccla/"
     ]
+    if not extension_id:
+        print(f"\n{BOLD}Chrome Extension ID is required for Native Messaging.{RESET}")
+        print("Find it at chrome://extensions (Enable 'Developer mode').")
+        extension_id = input(f"Enter Extension ID (leave blank to skip custom): ").strip()
+
     if extension_id:
         allowed_origins.append(f"chrome-extension://{extension_id}/")
-        print(f"Added custom extension ID: {HERMES_GOLD}{extension_id}{RESET}")
+        print(f"Added extension ID: {HERMES_GOLD}{extension_id}{RESET}")
 
     manifest = {
         "name": "com.frostmute.hermes_clipper",
@@ -309,7 +314,18 @@ def extract_content(url):
         soup = BeautifulSoup(response.text, "html.parser")
         title = soup.title.string if soup.title else "Untitled"
         content = extract_content_to_markdown(response.text)
-        return {"title": title, "content": content}
+        
+        # Try to extract more metadata
+        meta = extract_json_ld(soup)
+        
+        return {
+            "title": title, 
+            "content": content,
+            "author": meta.get("author", {}).get("name") if isinstance(meta.get("author"), dict) else meta.get("author", ""),
+            "site_name": meta.get("publisher", {}).get("name") if isinstance(meta.get("publisher"), dict) else meta.get("name", ""),
+            "description": meta.get("description", ""),
+            "published_date": meta.get("datePublished", "")
+        }
     except Exception as e:
         print_error(f"Extraction failed: {e}")
         sys.exit(1)
@@ -331,6 +347,11 @@ def check_duplicate(url, vault):
     return None
 
 def clip(url, title, content, folder="Clippings", tags=None, metadata=None, mode="unique", caveman=False, **kwargs):
+    # Detect HTML and clean it
+    if content.strip().startswith("<") and ("</html>" in content.lower() or "<body" in content.lower() or "<div" in content.lower()):
+        from .extractor import extract_content_to_markdown
+        content = extract_content_to_markdown(content)
+
     config = load_config()
     vault = config.get("vault_path")
     if not vault:
@@ -348,11 +369,42 @@ def clip(url, title, content, folder="Clippings", tags=None, metadata=None, mode
     path = os.path.join(target_dir, f"{filename}.md")
     
     template = DEFAULT_TEMPLATE
-    tag_str = ", ".join(["clipping"] + ([t.strip() for t in (tags or "").split(",")] if tags else []))
-    rendered = template.replace("{{title}}", title).replace("{{url}}", url).replace("{{content}}", content).replace("{{date}}", str(datetime.date.today())).replace("{{tags}}", tag_str)
     
-    for k, v in kwargs.items():
-        rendered = rendered.replace(f"{{{{{k}}}}}", str(v) if v else "")
+    # Load custom template if it exists
+    template_path = config.get("template_path")
+    if template_path and os.path.exists(template_path):
+        with open(template_path, "r") as f:
+            template = f.read()
+
+    tag_list = ["clipping"]
+    if tags:
+        tag_list.extend([t.strip() for t in tags.split(",")])
+    tag_str = ", ".join(tag_list)
+    
+    replacements = {
+        "title": title,
+        "url": url,
+        "content": content,
+        "date": str(datetime.date.today()),
+        "tags": tag_str
+    }
+    
+    # Merge metadata if provided
+    if metadata:
+        if isinstance(metadata, str):
+            try:
+                metadata = json.loads(metadata)
+            except:
+                metadata = {}
+        if isinstance(metadata, dict):
+            replacements.update(metadata)
+            
+    # Merge kwargs
+    replacements.update(kwargs)
+    
+    rendered = template
+    for k, v in replacements.items():
+        rendered = rendered.replace(f"{{{{{k}}}}}", str(v) if v is not None else "")
 
     with open(path, "w") as f:
         f.write(rendered)
