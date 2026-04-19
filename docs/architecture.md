@@ -10,7 +10,7 @@ Hermes Clipper is built on a modular, agent-first architecture:
 ### Core Components
 - **`hermes-clip` CLI Tool:**
     - **Location:** `src/hermes_clipper/main.py` (Installed via `./scripts/bootstrap.sh`)
-    - **Features:** Setup wizard, browser host provisioning (`setup-browser-host`), custom templates, direct URL extraction, conflict resolution, and JSON output with Obsidian URIs.
+    - **Features:** Setup wizard, browser host provisioning (`setup-browser-host`) with interactive Extension ID discovery, custom templates with metadata interpolation (author, site, description, published_date), direct URL extraction, conflict resolution, and JSON output with Obsidian URIs.
 - **`clipping` Skill:**
     - **Location:** `skills/clipping/`
     - **Function:** Logic for Hermes to research, search the vault for context, and intelligently file new clippings.
