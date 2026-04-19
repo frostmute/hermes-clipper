@@ -426,7 +426,14 @@ def clip(url, title, content, folder="Clippings", tags=None, metadata=None, mode
     for k, v in replacements.items():
         # Handle both {{key}} and {{ key }}
         pattern = re.compile(f"\\{{\\{{\\s*{re.escape(k)}\\s*\\}}\\}}")
+        
+        # Escape double quotes for YAML frontmatter compatibility
+        # We only do this if the value is a string and likely to be in the frontmatter
+        # Actually, it's safer to just escape all quotes for the {{placeholder}} replacements
         val = str(v) if v is not None else ""
+        if isinstance(v, str):
+            val = v.replace('"', '\\"')
+            
         rendered = pattern.sub(lambda m, val=val: val, rendered)
 
     with open(path, "w") as f:

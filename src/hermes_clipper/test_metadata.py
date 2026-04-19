@@ -51,7 +51,7 @@ missing: "{{ missing_field }}"
 {{content}}"""
         
         replacements = {
-            "title": "Test Title",
+            "title": 'Test "Title" with Quotes',
             "description": "Test Desc with \\1 backreference",
             "author": "Jane Doe",
             "site_name": "My Site",
@@ -63,9 +63,11 @@ missing: "{{ missing_field }}"
         for k, v in replacements.items():
             pattern = re.compile(f"\\{{\\{{\\s*{re.escape(k)}\\s*\\}}\\}}")
             val = str(v)
+            if isinstance(v, str):
+                val = v.replace('"', '\\"')
             rendered = pattern.sub(lambda m, val=val: val, rendered)
             
-        self.assertIn('title: "Test Title"', rendered)
+        self.assertIn('title: "Test \\"Title\\" with Quotes"', rendered)
         self.assertIn('desc: "Test Desc with \\1 backreference"', rendered)
         self.assertIn('author: "Jane Doe"', rendered)
         self.assertIn('site: "My Site"', rendered)
