@@ -347,12 +347,10 @@ def check_duplicate(url, vault):
     return None
 
 def clip(url, title, content, folder="Clippings", tags=None, metadata=None, mode="unique", caveman=False, **kwargs):
-    # Robust HTML detection
+    # Aggressive HTML detection
     is_html = False
     stripped_content = content.strip()
-    if stripped_content.startswith("<"):
-        is_html = True
-    elif "</html>" in content.lower() or "<body" in content.lower() or "<div" in content.lower():
+    if stripped_content.startswith("<") or "<html" in content.lower() or "<body" in content.lower() or "<div" in content.lower() or "<p" in content.lower() or "<script" in content.lower():
         is_html = True
     
     if is_html:
@@ -367,6 +365,8 @@ def clip(url, title, content, folder="Clippings", tags=None, metadata=None, mode
     if not vault:
         print_error("Vault path not set. Run 'hermes-clip setup'.")
         sys.exit(1)
+
+    print_header(f"Clipping: {title}")
 
     if mode == "unique":
         if dup := check_duplicate(url, vault):

@@ -90,13 +90,12 @@ async function sendToBridge(endpoint) {
     } else if (data.status === 'success') {
       status.textContent = "Done. Don't expect a medal.";
       btn.classList.remove('pulse');
+    } else if (data.status === 'exists') {
+      status.textContent = "Already exists. Stop hoarding.";
+      btn.classList.remove('pulse');
     } else {
-      let errorMessage = 'Unknown error';
-      if (data.detail) {
-        errorMessage = typeof data.detail === 'string' ? data.detail : JSON.stringify(data.detail);
-      } else if (data.message) {
-        errorMessage = data.message;
-      }
+      let errorMessage = data.detail || data.message || data.error || `HTTP ${response.status}`;
+      if (typeof errorMessage !== 'string') errorMessage = JSON.stringify(errorMessage);
       status.textContent = "Rejected: " + errorMessage;
       btn.classList.remove('pulse');
     }
