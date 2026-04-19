@@ -44,16 +44,35 @@ async function sendToBridge(endpoint) {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
     const results = await chrome.scripting.executeScript({
       target: { tabId: tab.id },
-      func: () => ({
-        url: window.location.href,
-        title: document.title,
-        content: document.documentElement.outerHTML
-      })
+      func: () => {
+        const getMeta = (name) => {
+          const el = document.querySelector(`meta[name="${name}"], meta[property="${name}"], meta[property="og:${name}"], meta[property="twitter:${name}"]`);
+          return el ? el.getAttribute('content') : '';
+        };
+        return {
+          url: window.location.href,
+          title: document.title,
+          content: document.documentElement.outerHTML,
+          metadata: {
+            description: getMeta('description') || getMeta('og:description') || '',
+            author: getMeta('author') || getMeta('article:author') || '',
+            site_name: getMeta('site_name') || getMeta('og:site_name') || '',
+            published_date: getMeta('published_time') || getMeta('article:published_time') || getMeta('date') || '',
+            banner: getMeta('og:image') || getMeta('twitter:image') || ''
+          }
+        };
+      }
     });
 
     const pageData = results[0].result;
     const body = endpoint === '/clip' 
-      ? JSON.stringify({ url: pageData.url, title: pageData.title, content: pageData.content, tags: ["web-clip"] })
+      ? JSON.stringify({ 
+          url: pageData.url, 
+          title: pageData.title, 
+          content: pageData.content, 
+          tags: ["web-clip"],
+          metadata: pageData.metadata
+        })
       : JSON.stringify({ url: pageData.url, prompt: "Research and clip." });
 
     const response = await fetch(`http://127.0.0.1:8088${endpoint}`, {

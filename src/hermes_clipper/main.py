@@ -347,10 +347,20 @@ def check_duplicate(url, vault):
     return None
 
 def clip(url, title, content, folder="Clippings", tags=None, metadata=None, mode="unique", caveman=False, **kwargs):
-    # Detect HTML and clean it
-    if content.strip().startswith("<") and ("</html>" in content.lower() or "<body" in content.lower() or "<div" in content.lower()):
-        from .extractor import extract_content_to_markdown
-        content = extract_content_to_markdown(content)
+    # Robust HTML detection
+    is_html = False
+    stripped_content = content.strip()
+    if stripped_content.startswith("<"):
+        is_html = True
+    elif "</html>" in content.lower() or "<body" in content.lower() or "<div" in content.lower():
+        is_html = True
+    
+    if is_html:
+        try:
+            from .extractor import extract_content_to_markdown
+            content = extract_content_to_markdown(content)
+        except Exception as e:
+            print_error(f"HTML extraction failed: {e}")
 
     config = load_config()
     vault = config.get("vault_path")
@@ -386,7 +396,12 @@ def clip(url, title, content, folder="Clippings", tags=None, metadata=None, mode
         "url": url,
         "content": content,
         "date": str(datetime.date.today()),
-        "tags": tag_str
+        "tags": tag_str,
+        "author": "",
+        "site_name": "",
+        "description": "",
+        "published_date": "",
+        "banner": ""
     }
     
     # Merge metadata if provided
@@ -399,12 +414,14 @@ def clip(url, title, content, folder="Clippings", tags=None, metadata=None, mode
         if isinstance(metadata, dict):
             replacements.update(metadata)
             
-    # Merge kwargs
+    # Merge kwargs (e.g. banner)
     replacements.update(kwargs)
     
     rendered = template
     for k, v in replacements.items():
-        rendered = rendered.replace(f"{{{{{k}}}}}", str(v) if v is not None else "")
+        # Handle both {{key}} and {{ key }}
+        pattern = re.compile(f"\\{{\\{{\\s*{re.escape(k)}\\s*\\}}\\}}")
+        rendered = pattern.sub(str(v) if v is not None else "", rendered)
 
     with open(path, "w") as f:
         f.write(rendered)

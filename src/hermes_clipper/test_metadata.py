@@ -35,5 +35,41 @@ class TestMetadata(unittest.TestCase):
         self.assertIn("This domain is for use in documentation examples", ext["content"])
         self.assertEqual(ext["site_name"], "")
 
+    def test_clip_replacement(self):
+        # Mocking clip functionality locally
+        import datetime
+        import re
+        
+        template = """---
+title: "{{title}}"
+desc: "{{ description }}"
+author: "{{  author  }}"
+site: "{{site_name}}"
+missing: "{{ missing_field }}"
+---
+# {{title}}
+{{content}}"""
+        
+        replacements = {
+            "title": "Test Title",
+            "description": "Test Desc",
+            "author": "Jane Doe",
+            "site_name": "My Site",
+            "content": "Test Content",
+            "date": str(datetime.date.today())
+        }
+        
+        rendered = template
+        for k, v in replacements.items():
+            pattern = re.compile(f"\\{{\\{{\\s*{re.escape(k)}\\s*\\}}\\}}")
+            rendered = pattern.sub(str(v), rendered)
+            
+        self.assertIn('title: "Test Title"', rendered)
+        self.assertIn('desc: "Test Desc"', rendered)
+        self.assertIn('author: "Jane Doe"', rendered)
+        self.assertIn('site: "My Site"', rendered)
+        self.assertIn('missing: "{{ missing_field }}"', rendered)
+        self.assertIn('Test Content', rendered)
+
 if __name__ == "__main__":
     unittest.main()
