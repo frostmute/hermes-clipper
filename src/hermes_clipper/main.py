@@ -336,10 +336,15 @@ def sanitize_filename(title):
 
 def check_duplicate(url, vault):
     if not url or not vault: return None
+    clippings_dir = os.path.join(vault, "Clippings")
+    if not os.path.exists(clippings_dir):
+        return None
     try:
         patterns = [f"source: {url}", f'source: "{url}"']
         for pattern in patterns:
-            cmd = ["grep", "-rl", pattern, vault]
+            # Use fixed strings (-F) for URL search to avoid regex issues
+            # Only search within Clippings directory to avoid false positives
+            cmd = ["grep", "-rlF", pattern, clippings_dir]
             result = subprocess.run(cmd, capture_output=True, text=True)
             if result.returncode == 0 and result.stdout.strip():
                 return result.stdout.splitlines()[0]
