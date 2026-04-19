@@ -11,14 +11,31 @@ Capture content, file in Obsidian. Use `hermes-clip`.
 
 ## Usage
 
+### Clipping a URL
 ```bash
 hermes-clip --url "URL" --title "TITLE" --content "MARKDOWN" --folder "SUBFOLDER" [--tags "TAGS"] [--mode "unique|merge|overwrite"]
 ```
 
+### Synthesizing a Note
+When asked to **Synthesize** a note:
+1. **Read Note:** Read the content of the target `.md` file.
+2. **Refine:**
+   - Fix formatting, typos, and broken links.
+   - Extract key themes and add relevant tags.
+   - Identify cross-linking opportunities to other notes in the vault.
+3. **Categorize:**
+   - Use `VAULT_STRUCTURE.md` to find a permanent home (e.g. `Research/AI/Agents`).
+   - If no suitable folder exists, create one or keep it in `Clippings/` if appropriate.
+4. **Execute:**
+   - Use `write_file` to save the refined content.
+   - Use `mv` (shell) to move the file to its new destination if changed.
+   - Report completion.
+
 ## Logic
 
 1. **Extract:** 
-   - Navigate URL.
+... (rest of the file)
+
    - Read first 4k chars for categorization.
    - Extract full Markdown.
    - Identify topic, author, themes.

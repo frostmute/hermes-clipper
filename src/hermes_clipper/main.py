@@ -462,9 +462,9 @@ def synthesize_clip(note_path, extra_prompt=None):
     else:
         abs_path = note_path
 
-    prompt = f"Synthesize {abs_path}."
+    prompt = f'Synthesize "{abs_path}".'
     if extra_prompt: prompt += f" Note: {extra_prompt}"
-    cmd = ["hermes", "chat", "-q", prompt, "-t", "browser,terminal", "-s", "clipping", "--yolo"]
+    cmd = ["hermes", "chat", "-q", prompt, "-t", "browser,terminal,researcher", "-s", "clipping", "--yolo"]
     try:
         result = subprocess.run(cmd, capture_output=True, text=True, check=True)
         return {"status": "success", "agent_output": result.stdout}
