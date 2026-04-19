@@ -453,7 +453,16 @@ def agent_clip(url, folder="Clippings", extra_prompt=None, mode="unique"):
         return {"status": "error", "message": str(e)}
 
 def synthesize_clip(note_path, extra_prompt=None):
-    prompt = f"Synthesize {note_path}."
+    config = load_config()
+    vault = config.get("vault_path")
+    
+    # Resolve absolute path if relative path was provided
+    if vault and not os.path.isabs(note_path):
+        abs_path = os.path.join(vault, note_path)
+    else:
+        abs_path = note_path
+
+    prompt = f"Synthesize {abs_path}."
     if extra_prompt: prompt += f" Note: {extra_prompt}"
     cmd = ["hermes", "chat", "-q", prompt, "-t", "browser,terminal", "-s", "clipping", "--yolo"]
     try:
