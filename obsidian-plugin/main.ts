@@ -1,4 +1,4 @@
-import { Plugin, Notice, TFile, WorkspaceLeaf } from 'obsidian';
+import { Plugin, Notice, TFile, App, PluginSettingTab, Setting } from 'obsidian';
 
 interface ClipperSettings {
 	bridgeUrl: string;
@@ -29,6 +29,8 @@ export default class HermesClipperPlugin extends Plugin {
 			name: 'Synthesize Current Note',
 			callback: () => this.synthesizeNote()
 		});
+
+		this.addSettingTab(new HermesClipperSettingTab(this.app, this));
 	}
 
 	async synthesizeNote() {
@@ -124,5 +126,44 @@ export default class HermesClipperPlugin extends Plugin {
 
 	async saveSettings() {
 		await this.saveData(this.settings);
+	}
+}
+
+class HermesClipperSettingTab extends PluginSettingTab {
+	plugin: HermesClipperPlugin;
+
+	constructor(app: App, plugin: HermesClipperPlugin) {
+		super(app, plugin);
+		this.plugin = plugin;
+	}
+
+	display(): void {
+		const {containerEl} = this;
+
+		containerEl.empty();
+
+		containerEl.createEl('h2', {text: 'Hermes Clipper Settings'});
+
+		new Setting(containerEl)
+			.setName('Bridge URL')
+			.setDesc('The local URL where your Hermes Bridge is running.')
+			.addText(text => text
+				.setPlaceholder('http://127.0.0.1:8088')
+				.setValue(this.plugin.settings.bridgeUrl)
+				.onChange(async (value) => {
+					this.plugin.settings.bridgeUrl = value;
+					await this.plugin.saveSettings();
+				}));
+
+		new Setting(containerEl)
+			.setName('API Key')
+			.setDesc('Run "hermes-clip config" to find your key.')
+			.addText(text => text
+				.setPlaceholder('Enter your API key')
+				.setValue(this.plugin.settings.apiKey)
+				.onChange(async (value) => {
+					this.plugin.settings.apiKey = value;
+					await this.plugin.saveSettings();
+				}));
 	}
 }
